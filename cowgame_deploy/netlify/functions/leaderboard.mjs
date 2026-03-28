@@ -5,12 +5,17 @@ const MAX = 200;
 const CATEGORIES = ["ach", "level", "fruit", "fish"];
 
 async function readCat(store, cat) {
-    try { return (await store.get(cat, { type: "json" })) || []; }
-    catch { return []; }
+    try {
+        const data = await store.get(cat, { type: "json" });
+        return data || [];
+    } catch {
+        return [];
+    }
 }
 
 export default async function handler(req) {
-    const store = getStore({ name: STORE, consistency: "strong" });
+    // getStore 正确调用方式：第一个参数是 name，第二个是 options
+    const store = getStore("lb-v2", { consistency: "strong" });
     const url = new URL(req.url);
 
     if (req.method === "GET") {
@@ -34,11 +39,17 @@ export default async function handler(req) {
 
         const scores = await readCat(store, cat);
         const existIdx = scores.findIndex(s => s.name === name);
-        const entry = { name, value: Math.floor(value), extra: extra ? String(extra).slice(0, 20) : undefined, time: Date.now() };
+        const entry = {
+            name,
+            value: Math.floor(value),
+            extra: extra ? String(extra).slice(0, 20) : undefined,
+            time: Date.now()
+        };
 
         if (existIdx >= 0) {
-            if (value > scores[existIdx].value) scores[existIdx] = entry;
-            else {
+            if (value > scores[existIdx].value) {
+                scores[existIdx] = entry;
+            } else {
                 const rank = scores.findIndex(s => s.name === name) + 1;
                 return Response.json({ ok: true, rank, improved: false });
             }
