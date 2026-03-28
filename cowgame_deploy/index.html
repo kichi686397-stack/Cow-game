@@ -552,18 +552,17 @@
 <div class="changelog-overlay" id="lbOverlay">
   <div class="changelog-box" style="max-width:400px;padding:24px 20px">
     <h2 style="margin:0 0 14px;text-align:center">🏅 全球排行榜</h2>
-    <!-- 分类Tab -->
     <div style="display:flex;gap:6px;margin-bottom:14px">
-      <button class="lb-tab active" data-cat="level"  onclick="switchLbTab(this,'level')">🐄 等级</button>
-      <button class="lb-tab"        data-cat="ach"    onclick="switchLbTab(this,'ach')">🏆 成就</button>
-      <button class="lb-tab"        data-cat="fruit"  onclick="switchLbTab(this,'fruit')">🍎 接水果</button>
-      <button class="lb-tab"        data-cat="fish"   onclick="switchLbTab(this,'fish')">🎣 钓鱼</button>
+      <button class="lb-tab active" id="lbTab-level">🐄 等级</button>
+      <button class="lb-tab"        id="lbTab-ach">🏆 成就</button>
+      <button class="lb-tab"        id="lbTab-fruit">🍎 接水果</button>
+      <button class="lb-tab"        id="lbTab-fish">🎣 钓鱼</button>
     </div>
     <div id="lbList" style="min-height:200px;font-size:13px"></div>
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button onclick="loadLeaderboard()" style="flex:1;padding:8px;border-radius:10px;background:#f5f5f5;border:1.5px solid #ddd;cursor:pointer;font-size:13px">🔄 刷新</button>
-      <button onclick="uploadMyScores()" style="flex:1;padding:8px;border-radius:10px;background:#1976d2;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:bold">📤 上传我的数据</button>
-      <button onclick="document.getElementById('lbOverlay').classList.remove('open')" style="flex:1;padding:8px;border-radius:10px;background:#f5f5f5;border:1.5px solid #ddd;cursor:pointer;font-size:13px">关闭</button>
+      <button id="lbRefreshBtn" style="flex:1;padding:8px;border-radius:10px;background:#f5f5f5;border:1.5px solid #ddd;cursor:pointer;font-size:13px">🔄 刷新</button>
+      <button id="lbUploadBtn" style="flex:1;padding:8px;border-radius:10px;background:#1976d2;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:bold">📤 上传我的数据</button>
+      <button id="lbCloseBtn" style="flex:1;padding:8px;border-radius:10px;background:#f5f5f5;border:1.5px solid #ddd;cursor:pointer;font-size:13px">关闭</button>
     </div>
   </div>
 </div>
@@ -636,6 +635,7 @@
             <span>🎯 <span class="game-score-txt" id="gameScoreTxt">0</span></span>
             <span class="game-timer-txt" id="gameTimerTxt">30</span>
             <span style="font-size:12px;color:#888">最佳 <span id="gameBestHud">0</span></span>
+            <button id="gameExitBtn" style="font-size:12px;padding:4px 10px;border-radius:8px;border:1.5px solid #ddd;background:rgba(255,255,255,.9);cursor:pointer;color:#888">✕ 退出</button>
         </div>
         <div class="game-screen" id="gameStartScreen">
             <h2>🎮 接住食物！</h2>
@@ -3398,6 +3398,15 @@ document.getElementById('gameBtn').addEventListener('click',function(){
     skinPanel.classList.remove('open');achPanel.classList.remove('open');
 });
 document.getElementById('gameStartBtn').addEventListener('click',startGame);
+document.getElementById('gameExitBtn').addEventListener('click',function(){
+    if(!gameActive)return;
+    gameActive=false;
+    clearInterval(gameTimerIv);clearInterval(gameSpawnIv);
+    gameWrap.querySelectorAll('.g-item,.g-basket,.g-miss').forEach(function(el){el.remove();});
+    gameHud.style.display='none';
+    document.getElementById('gameOverlay').classList.remove('open');
+    bubble('游戏退出了 🐄',1500);
+});
 document.getElementById('gameRetryBtn').addEventListener('click',function(){
     document.getElementById('gameTimerTxt').style.color='#E53935';
     gameEndScr.style.display='none';
@@ -3933,43 +3942,33 @@ tBtn('t-universe-normal', function(){ enterUniverse('normal');  document.getElem
 var lbCurrentCat = 'level';
 
 var LB_CATS = {
-    level: {
-        label:'🐄 等级',
-        unit:'XP',
-        desc: function(s){ return s.extra||''; },
-        hint:'按喂食总XP排名'
-    },
-    ach: {
-        label:'🏆 成就',
-        unit:'个',
-        desc: function(s){ return s.extra||''; },
-        hint:'按解锁成就数排名'
-    },
-    fruit: {
-        label:'🍎 接水果',
-        unit:'分',
-        desc: function(s){ return s.extra ? '宇宙：'+s.extra : ''; },
-        hint:'接水果小游戏最高分'
-    },
-    fish: {
-        label:'🎣 钓鱼',
-        unit:'条',
-        desc: function(s){ return s.extra ? '宇宙：'+s.extra : ''; },
-        hint:'累计钓鱼总数'
-    }
+    level: { label:'🐄 等级',    unit:'XP',  hint:'按喂食总XP排名',   desc:function(s){return s.extra||'';} },
+    ach:   { label:'🏆 成就',    unit:'个',  hint:'按解锁成就数排名', desc:function(s){return s.extra||'';} },
+    fruit: { label:'🍎 接水果',  unit:'分',  hint:'接水果小游戏最高分', desc:function(s){return s.extra?'宇宙：'+s.extra:'';} },
+    fish:  { label:'🎣 钓鱼',    unit:'条',  hint:'累计钓鱼总数',      desc:function(s){return s.extra?'宇宙：'+s.extra:'';} }
 };
 
-document.getElementById('lbBtn').addEventListener('click',function(){
+// 绑定Tab按钮
+['level','ach','fruit','fish'].forEach(function(cat){
+    var btn = document.getElementById('lbTab-'+cat);
+    if(btn) btn.addEventListener('click', function(){
+        lbCurrentCat = cat;
+        document.querySelectorAll('.lb-tab').forEach(function(b){ b.classList.remove('active'); });
+        btn.classList.add('active');
+        loadLeaderboard();
+    });
+});
+
+// 绑定操作按钮
+document.getElementById('lbBtn').addEventListener('click', function(){
     document.getElementById('lbOverlay').classList.add('open');
     loadLeaderboard();
 });
-
-function switchLbTab(el, cat){
-    lbCurrentCat = cat;
-    document.querySelectorAll('.lb-tab').forEach(function(b){ b.classList.remove('active'); });
-    el.classList.add('active');
-    loadLeaderboard();
-}
+document.getElementById('lbRefreshBtn').addEventListener('click', loadLeaderboard);
+document.getElementById('lbUploadBtn').addEventListener('click', uploadMyScores);
+document.getElementById('lbCloseBtn').addEventListener('click', function(){
+    document.getElementById('lbOverlay').classList.remove('open');
+});
 
 function loadLeaderboard(){
     var list = document.getElementById('lbList');
@@ -3994,18 +3993,17 @@ function loadLeaderboard(){
                 html += '<tr style="background:'+bg+';border-bottom:1px solid #f0f0f0">';
                 html += '<td style="padding:8px 6px;font-weight:bold;font-size:15px;width:32px">'+rankEl+'</td>';
                 html += '<td><div style="font-weight:'+(i<3||isMe?'bold':'normal')+(isMe?';color:#1976d2':'')+'">'+s.name+(isMe?' 👈':'')+'</div>'+(sub?'<div style="font-size:10px;color:#aaa">'+sub+'</div>':'')+'</td>';
-                html += '<td style="text-align:right;font-weight:bold;color:'+(i===0?'#f9a825':i===1?'#78909c':i===2?'#a1887f':'#1976d2')+';padding-right:4px">'+s.value+'<span style="font-size:10px;font-weight:normal;color:#aaa"> '+cfg.unit+'</span></td>';
+                html += '<td style="text-align:right;font-weight:bold;color:'+(i===0?'#f9a825':i===1?'#78909c':i===2?'#a1887f':'#1976d2')+';padding-right:4px;white-space:nowrap">'+s.value+' <span style="font-size:10px;font-weight:normal;color:#aaa">'+cfg.unit+'</span></td>';
                 html += '</tr>';
             });
             html += '</table>';
             list.innerHTML = html;
         })
         .catch(function(){
-            list.innerHTML = '<div style="text-align:center;padding:40px;color:#e53935">连接失败 😢<br><small>请确认已部署到 Netlify</small></div>';
+            list.innerHTML = '<div style="text-align:center;padding:40px;color:#e53935">连接失败 😢</div>';
         });
 }
 
-// 上传全部数据到排行榜
 function uploadMyScores(){
     var saved = localStorage.getItem('pixelcow_lbname');
     var name = window.prompt('输入你的名字上榜（最多10字）：', saved||'');
@@ -4013,49 +4011,39 @@ function uploadMyScores(){
     name = name.slice(0,10).trim();
     if(!name) return;
     localStorage.setItem('pixelcow_lbname', name);
-
     var lvName = LVS[getLvIdx()].name;
     var uniLabel = {normal:'普通农场',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[currentUniverse]||'';
-
     var uploads = [
-        { cat:'level', value:feedCount, extra:'Lv.'+oxLevel+' '+lvName },
-        { cat:'ach',   value:unlockedAchs.length, extra:unlockedAchs.length+'/'+ACHS.length+'个' },
-        { cat:'fruit', value:ST.gameMaxScore||0, extra:uniLabel },
-        { cat:'fish',  value:ST.fishCaught||0,  extra:uniLabel }
+        {cat:'level', value:feedCount,              extra:'Lv.'+oxLevel+' '+lvName},
+        {cat:'ach',   value:unlockedAchs.length,    extra:unlockedAchs.length+'/'+ACHS.length+'个'},
+        {cat:'fruit', value:ST.gameMaxScore||0,      extra:uniLabel},
+        {cat:'fish',  value:ST.fishCaught||0,        extra:uniLabel}
     ];
-
     var done = 0;
     uploads.forEach(function(u){
-        fetch('/api/leaderboard', {
+        fetch('/api/leaderboard',{
             method:'POST',
             headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ name:name, cat:u.cat, value:u.value, extra:u.extra })
-        }).then(function(r){ return r.json(); })
-        .then(function(d){
+            body:JSON.stringify({name:name, cat:u.cat, value:u.value, extra:u.extra})
+        }).then(function(r){return r.json();})
+        .then(function(){
             done++;
-            if(done === uploads.length){
-                bubble('🏅 数据已上榜！去看看你的排名吧', 3000);
-                loadLeaderboard();
-            }
+            if(done===uploads.length){ bubble('🏅 已上榜！', 2500); loadLeaderboard(); }
         }).catch(function(){ done++; });
     });
 }
 
-// 接水果游戏结束自动提示上传
 function submitScore(score, game){
-    // 静默上传（如果有名字就直接传，没有就不打扰）
     var name = localStorage.getItem('pixelcow_lbname');
-    if(!name) return; // 没名字就不传，让玩家手动点上传
+    if(!name) return;
     var uniLabel = {normal:'普通农场',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[currentUniverse]||'';
-    fetch('/api/leaderboard', {
+    fetch('/api/leaderboard',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ name:name, cat:game, value:score, extra:uniLabel })
-    }).then(function(r){ return r.json(); })
+        body:JSON.stringify({name:name, cat:game, value:score, extra:uniLabel})
+    }).then(function(r){return r.json();})
     .then(function(d){
-        if(d.ok && d.improved && d.rank <= 10){
-            bubble('🏅 新纪录！排行榜第'+d.rank+'名！', 3000);
-        }
+        if(d.ok && d.improved && d.rank<=10) bubble('🏅 新纪录！排行榜第'+d.rank+'名！',3000);
     }).catch(function(){});
 }
 
