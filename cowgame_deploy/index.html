@@ -3939,13 +3939,20 @@ tBtn('t-universe-ancient',function(){ enterUniverse('ancient'); document.getElem
 tBtn('t-universe-normal', function(){ enterUniverse('normal');  document.getElementById('testPanel').classList.remove('open'); });
 
 /* ═══ 排行榜 ═══ */
-var lbCurrentCat = 'level';
+var SB_URL = 'https://pbjhefijqvxhptddjcxr.supabase.co';
+var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBiamhlZmlqcXZ4aHB0ZGRqY3hyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMDg2MTksImV4cCI6MjA5MDY4NDYxOX0.rdNSOz9w6x80Lg4h178ztXrBkfkFvVG-J2xl6DDYAA4';
+var SB_HEADERS = {
+    'Content-Type': 'application/json',
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + SB_KEY
+};
 
+var lbCurrentCat = 'level';
 var LB_CATS = {
-    level: { label:'🐄 等级',    unit:'XP',  hint:'按喂食总XP排名',   desc:function(s){return s.extra||'';} },
-    ach:   { label:'🏆 成就',    unit:'个',  hint:'按解锁成就数排名', desc:function(s){return s.extra||'';} },
-    fruit: { label:'🍎 接水果',  unit:'分',  hint:'接水果小游戏最高分', desc:function(s){return s.extra?'宇宙：'+s.extra:'';} },
-    fish:  { label:'🎣 钓鱼',    unit:'条',  hint:'累计钓鱼总数',      desc:function(s){return s.extra?'宇宙：'+s.extra:'';} }
+    level: { unit:'XP',  hint:'按喂食总XP排名',     desc:function(s){return s.extra||'';} },
+    ach:   { unit:'个',  hint:'按解锁成就数排名',   desc:function(s){return s.extra||'';} },
+    fruit: { unit:'分',  hint:'接水果小游戏最高分', desc:function(s){return s.extra?'宇宙：'+s.extra:'';} },
+    fish:  { unit:'条',  hint:'累计钓鱼总数',       desc:function(s){return s.extra?'宇宙：'+s.extra:'';} }
 };
 
 // 绑定Tab按钮
@@ -3959,7 +3966,6 @@ var LB_CATS = {
     });
 });
 
-// 绑定操作按钮
 document.getElementById('lbBtn').addEventListener('click', function(){
     document.getElementById('lbOverlay').classList.add('open');
     loadLeaderboard();
@@ -3973,10 +3979,11 @@ document.getElementById('lbCloseBtn').addEventListener('click', function(){
 function loadLeaderboard(){
     var list = document.getElementById('lbList');
     list.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">加载中... 🐄</div>';
-    fetch('/api/leaderboard?cat='+lbCurrentCat+'&limit=10')
+    var url = SB_URL+'/rest/v1/leaderboard?cat=eq.'+lbCurrentCat+'&order=value.desc&limit=10&select=name,value,extra';
+    fetch(url, { headers: SB_HEADERS })
         .then(function(r){ return r.json(); })
-        .then(function(data){
-            if(!data.ok || !data.scores.length){
+        .then(function(rows){
+            if(!rows || !rows.length){
                 list.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">暂无记录<br>快来第一个上榜！🐄</div>';
                 return;
             }
@@ -3985,14 +3992,13 @@ function loadLeaderboard(){
             var myName = localStorage.getItem('pixelcow_lbname')||'';
             var html = '<div style="font-size:11px;color:#aaa;margin-bottom:8px;text-align:center">'+cfg.hint+'</div>';
             html += '<table style="width:100%;border-collapse:collapse">';
-            data.scores.forEach(function(s, i){
+            rows.forEach(function(s, i){
                 var isMe = myName && s.name === myName;
                 var bg = isMe ? '#e3f2fd' : (i<3 ? ['#fffde7','#f5f5f5','#fff3e0'][i] : '');
-                var rankEl = medals[i] || (i+1);
                 var sub = cfg.desc(s);
                 html += '<tr style="background:'+bg+';border-bottom:1px solid #f0f0f0">';
-                html += '<td style="padding:8px 6px;font-weight:bold;font-size:15px;width:32px">'+rankEl+'</td>';
-                html += '<td><div style="font-weight:'+(i<3||isMe?'bold':'normal')+(isMe?';color:#1976d2':'')+'">'+s.name+(isMe?' 👈':'')+'</div>'+(sub?'<div style="font-size:10px;color:#aaa">'+sub+'</div>':'')+'</td>';
+                html += '<td style="padding:8px 6px;font-weight:bold;font-size:15px;width:32px">'+(medals[i]||(i+1))+'</td>';
+                html += '<td><div style="font-weight:'+(i<3||isMe?'bold':'normal')+(isMe?';color:#1976d2':'')+'">' +s.name+(isMe?' 👈':'')+'</div>'+(sub?'<div style="font-size:10px;color:#aaa">'+sub+'</div>':'')+'</td>';
                 html += '<td style="text-align:right;font-weight:bold;color:'+(i===0?'#f9a825':i===1?'#78909c':i===2?'#a1887f':'#1976d2')+';padding-right:4px;white-space:nowrap">'+s.value+' <span style="font-size:10px;font-weight:normal;color:#aaa">'+cfg.unit+'</span></td>';
                 html += '</tr>';
             });
@@ -4002,6 +4008,14 @@ function loadLeaderboard(){
         .catch(function(){
             list.innerHTML = '<div style="text-align:center;padding:40px;color:#e53935">连接失败 😢</div>';
         });
+}
+
+function sbUpsert(name, cat, value, extra){
+    return fetch(SB_URL+'/rest/v1/leaderboard', {
+        method: 'POST',
+        headers: Object.assign({}, SB_HEADERS, {'Prefer': 'resolution=merge-duplicates'}),
+        body: JSON.stringify({ name:name, cat:cat, value:value, extra:extra||null })
+    });
 }
 
 function uploadMyScores(){
@@ -4014,37 +4028,21 @@ function uploadMyScores(){
     var lvName = LVS[getLvIdx()].name;
     var uniLabel = {normal:'普通农场',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[currentUniverse]||'';
     var uploads = [
-        {cat:'level', value:feedCount,              extra:'Lv.'+oxLevel+' '+lvName},
-        {cat:'ach',   value:unlockedAchs.length,    extra:unlockedAchs.length+'/'+ACHS.length+'个'},
-        {cat:'fruit', value:ST.gameMaxScore||0,      extra:uniLabel},
-        {cat:'fish',  value:ST.fishCaught||0,        extra:uniLabel}
+        {cat:'level', value:feedCount,           extra:'Lv.'+oxLevel+' '+lvName},
+        {cat:'ach',   value:unlockedAchs.length, extra:unlockedAchs.length+'/'+ACHS.length+'个'},
+        {cat:'fruit', value:ST.gameMaxScore||0,   extra:uniLabel},
+        {cat:'fish',  value:ST.fishCaught||0,     extra:uniLabel}
     ];
-    var done = 0;
-    uploads.forEach(function(u){
-        fetch('/api/leaderboard',{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({name:name, cat:u.cat, value:u.value, extra:u.extra})
-        }).then(function(r){return r.json();})
-        .then(function(){
-            done++;
-            if(done===uploads.length){ bubble('🏅 已上榜！', 2500); loadLeaderboard(); }
-        }).catch(function(){ done++; });
-    });
+    Promise.all(uploads.map(function(u){ return sbUpsert(name, u.cat, u.value, u.extra); }))
+        .then(function(){ bubble('🏅 已上榜！去看看排名吧', 2500); loadLeaderboard(); })
+        .catch(function(){ bubble('上传失败，请检查网络', 2000); });
 }
 
 function submitScore(score, game){
     var name = localStorage.getItem('pixelcow_lbname');
     if(!name) return;
     var uniLabel = {normal:'普通农场',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[currentUniverse]||'';
-    fetch('/api/leaderboard',{
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({name:name, cat:game, value:score, extra:uniLabel})
-    }).then(function(r){return r.json();})
-    .then(function(d){
-        if(d.ok && d.improved && d.rank<=10) bubble('🏅 新纪录！排行榜第'+d.rank+'名！',3000);
-    }).catch(function(){});
+    sbUpsert(name, game, score, uniLabel).catch(function(){});
 }
 
 })();
