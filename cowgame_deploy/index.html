@@ -94,19 +94,20 @@
         .food-btn{font-size:27px;min-width:46px;height:46px;display:flex;align-items:center;justify-content:center;background:transparent;border:none;border-radius:10px;cursor:pointer;transition:transform .15s,background .15s;flex-shrink:0}
         .food-btn:hover{transform:scale(1.25);background:rgba(0,0,0,.06)}
         .food-btn:active{transform:scale(.9)}
-        /* 扇形菜单 */
-        #fanMenu{position:fixed;right:20px;bottom:30px;z-index:150;width:56px;height:56px}
-        #fanToggle{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#fffbe7,#fff);border:2.5px solid #e8c840;font-size:26px;cursor:pointer;box-shadow:0 3px 16px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;transition:transform .35s ease;position:relative;z-index:2}
+        /* 菜单按钮组 */
+        #fanMenu{position:fixed;right:16px;bottom:24px;z-index:150}
+        #fanToggle{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#fffbe7,#fff);border:2.5px solid #e8c840;font-size:26px;cursor:pointer;box-shadow:0 3px 16px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;transition:transform .3s ease}
         #fanToggle.open{transform:rotate(135deg)}
+        #menuPopup{position:fixed;right:16px;bottom:90px;background:rgba(255,255,255,.97);border-radius:18px;padding:12px;box-shadow:0 6px 32px rgba(0,0,0,.18);display:none;grid-template-columns:repeat(4,56px);gap:8px;border:1.5px solid #eee;z-index:151}
+        #menuPopup.open{display:grid;animation:popIn .2s ease-out}
         .fan-backdrop{display:none;position:fixed;inset:0;z-index:149}
         .fan-backdrop.show{display:block}
-        .side-btn{position:absolute;bottom:3px;right:3px;font-size:20px;background:rgba(255,255,255,.97);border:2px solid #ddd;border-radius:14px;width:50px;height:50px;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,.15);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:transform .35s cubic-bezier(.34,1.56,.64,1), opacity .25s ease;transform:scale(0.3);z-index:1}
-        .side-btn.fan-open{opacity:1;pointer-events:auto;transform:scale(1)}
-        .side-btn:hover{filter:brightness(1.05);box-shadow:0 4px 16px rgba(0,0,0,.2)}
-        .fan-label{position:absolute;right:58px;top:50%;transform:translateY(-50%);background:rgba(40,40,40,.82);color:#fff;font-size:11px;border-radius:8px;padding:4px 9px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s}
-        .side-btn.fan-open:hover .fan-label{opacity:1}
+        .side-btn{width:56px;height:64px;border-radius:14px;background:#fff;border:1.5px solid #eee;font-size:20px;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:transform .15s,box-shadow .15s}
+        .side-btn:hover{transform:scale(1.06);box-shadow:0 3px 14px rgba(0,0,0,.15)}
+        .side-btn:active{transform:scale(.96)}
+        .side-btn span.fan-label{font-size:9px;color:#888;font-weight:bold;line-height:1}
         .side-btn.new-unlock{animation:skinPulse .7s ease-in-out infinite}
-        @keyframes skinPulse{0%,100%{box-shadow:0 2px 12px rgba(0,0,0,.15)}50%{box-shadow:0 0 0 5px rgba(255,215,0,.45)}}
+        @keyframes skinPulse{0%,100%{box-shadow:0 1px 6px rgba(0,0,0,.08)}50%{box-shadow:0 0 0 4px rgba(255,215,0,.5)}}
         /* 教程 */
         #tutOverlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:3000;display:none;align-items:center;justify-content:center}
         #tutOverlay.show{display:flex;animation:popIn .3s ease-out}
@@ -568,20 +569,20 @@
 
         #fishBtn.biting{animation:skinPulse .4s ease-in-out infinite;border-color:#f44336}
 
-<!-- 扇形菜单 -->
+<!-- 菜单 -->
 <div id="fanMenu">
     <div class="fan-backdrop" id="fanBackdrop"></div>
     <button id="fanToggle" title="菜单">🐄</button>
-    <button class="side-btn" id="skinBtn">🎨<span class="fan-label">皮肤装备</span></button>
+</div>
+<div id="menuPopup">
+    <button class="side-btn" id="skinBtn">🎨<span class="fan-label">皮肤</span></button>
     <button class="side-btn" id="achBtn">🏆<span class="fan-label">成就</span></button>
-    <button class="side-btn" id="gameBtn">🎮<span class="fan-label">迷你游戏</span></button>
-    <button class="side-btn" id="rainBtn">🌦️<span class="fan-label">呼唤雨天</span></button>
-    <button class="side-btn" id="universeBtn">🌍<span class="fan-label">平行宇宙</span></button>
-    <button class="side-btn" id="fishBtn">🎣<span class="fan-label">去钓鱼</span></button>
+    <button class="side-btn" id="gameBtn">🎮<span class="fan-label">游戏</span></button>
+    <button class="side-btn" id="rainBtn">🌦️<span class="fan-label">雨天</span></button>
+    <button class="side-btn" id="universeBtn">🌍<span class="fan-label">宇宙</span></button>
+    <button class="side-btn" id="fishBtn">🎣<span class="fan-label">钓鱼</span></button>
     <button class="side-btn" id="lbBtn">🏅<span class="fan-label">排行榜</span></button>
 </div>
-
-<!-- 教程覆层 -->
 <div id="tutOverlay">
     <div id="tutCard">
         <div class="tut-icon" id="tutIcon">🐄</div>
@@ -4113,47 +4114,30 @@ function submitScore(score, game){
     sbUpsert(name, game, score, uniLabel).catch(function(){});
 }
 
-/* ═══ 扇形菜单 ═══ */
+/* ═══ 菜单弹出 ═══ */
 var fanOpen = false;
-var fanBtns = [
-    document.getElementById('skinBtn'),
-    document.getElementById('achBtn'),
-    document.getElementById('gameBtn'),
-    document.getElementById('rainBtn'),
-    document.getElementById('universeBtn'),
-    document.getElementById('fishBtn'),
-    document.getElementById('lbBtn'),
-];
-var FAN_R = 115;
-function applyFanPos(open) {
-    fanBtns.forEach(function(btn, i) {
-        var ratio = i / (fanBtns.length - 1);
-        var angleDeg = -ratio * 95;
-        var angleRad = angleDeg * Math.PI / 180;
-        var dx = FAN_R * Math.sin(angleRad);
-        var dy = -FAN_R * Math.cos(angleRad);
-        if (open) {
-            btn.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) scale(1)';
-            btn.style.transitionDelay = (i * 35) + 'ms';
-            btn.classList.add('fan-open');
-        } else {
-            btn.style.transform = 'scale(0.3)';
-            btn.style.transitionDelay = ((fanBtns.length - 1 - i) * 25) + 'ms';
-            btn.classList.remove('fan-open');
-        }
-    });
-}
+var menuPopup = document.getElementById('menuPopup');
 document.getElementById('fanToggle').addEventListener('click', function() {
     fanOpen = !fanOpen;
     this.classList.toggle('open', fanOpen);
+    menuPopup.classList.toggle('open', fanOpen);
     document.getElementById('fanBackdrop').classList.toggle('show', fanOpen);
-    applyFanPos(fanOpen);
 });
 document.getElementById('fanBackdrop').addEventListener('click', function() {
     fanOpen = false;
     document.getElementById('fanToggle').classList.remove('open');
+    menuPopup.classList.remove('open');
     this.classList.remove('show');
-    applyFanPos(false);
+});
+// 点任意菜单项后收起
+['skinBtn','achBtn','gameBtn','rainBtn','universeBtn','fishBtn','lbBtn'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.addEventListener('click', function(){
+        fanOpen = false;
+        document.getElementById('fanToggle').classList.remove('open');
+        menuPopup.classList.remove('open');
+        document.getElementById('fanBackdrop').classList.remove('show');
+    }, true);
 });
 
 /* ═══ 新手教程 ═══ */
