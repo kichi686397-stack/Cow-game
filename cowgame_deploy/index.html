@@ -307,6 +307,7 @@
             <span style="font-size:20px">🐂</span>
             <span style="font-weight:bold" id="oxName">小牛犊</span>
             <span class="lv-badge" id="lvBadge">Lv.1</span>
+            <button id="fxToggleBtn" title="关闭/开启等级特效" style="display:none;font-size:11px;padding:2px 7px;border-radius:10px;border:1px solid #ddd;background:#f9f9f9;cursor:pointer;color:#888;flex-shrink:0">✨特效</button>
         </div>
         <div class="status-item" style="gap:6px">
             <span style="font-size:12px;color:#888">经验</span>
@@ -400,7 +401,7 @@
         <button class="t-btn" id="t-stoprain">☀️ 停止下雨</button>
         <button class="t-btn" id="t-sleep">😴 触发睡觉</button>
         <button class="t-btn" id="t-happy">🎉 触发开心跳</button>
-        <button class="t-btn" id="t-levelup">⬆️ +10 经验</button>
+        <button class="t-btn" id="t-levelup">⬆️ +10000 经验</button>
         <button class="t-btn" id="t-unlockall">🔓 解锁所有皮肤</button>
         <button class="t-btn" id="t-thirstzero">💀 清空口渴</button>
         <button class="t-btn" id="t-dawn">🌅 切换白天</button>
@@ -693,15 +694,15 @@ var ST={
 /* ═══ 等级系统 ═══ */
 var LVS=[
     {min:0,    max:99,   sc:1.0,  name:'小牛犊'},
-    {min:100,  max:249,  sc:1.1,  name:'小牛'},
-    {min:250,  max:499,  sc:1.2,  name:'壮牛'},
-    {min:500,  max:999,  sc:1.35, name:'大牛'},
-    {min:1000, max:1999, sc:1.5,  name:'牛王'},
-    {min:2000, max:3499, sc:1.65, name:'神牛'},
-    {min:3500, max:5999, sc:1.8,  name:'传奇牛'},
-    {min:6000, max:9999, sc:2.0,  name:'史诗牛'},
-    {min:10000,max:19999,sc:2.2,  name:'远古牛'},
-    {min:20000,max:99999,sc:2.5,  name:'牛神'},
+    {min:100,  max:249,  sc:1.05, name:'小牛'},
+    {min:250,  max:499,  sc:1.1,  name:'壮牛'},
+    {min:500,  max:999,  sc:1.15, name:'大牛'},
+    {min:1000, max:1999, sc:1.2,  name:'牛王'},
+    {min:2000, max:3499, sc:1.23, name:'神牛'},
+    {min:3500, max:5999, sc:1.26, name:'传奇牛'},
+    {min:6000, max:9999, sc:1.29, name:'史诗牛'},
+    {min:10000,max:19999,sc:1.32, name:'远古牛'},
+    {min:20000,max:99999,sc:1.35, name:'牛神'},
 ];
 function getLvIdx(){for(var i=LVS.length-1;i>=0;i--)if(feedCount>=LVS[i].min)return i;return 0;}
 function updateLevel(fromFeed){
@@ -710,6 +711,9 @@ function updateLevel(fromFeed){
     oxLevel=idx+1;
     var ld=LVS[idx];
     lvBadge.textContent='Lv.'+oxLevel;
+    // 6级以上显示特效开关按钮
+    var fxBtn=document.getElementById('fxToggleBtn');
+    if(fxBtn) fxBtn.style.display = oxLevel>=6 ? '' : 'none';
     oxNameEl.textContent=ld.name;
     var next=LVS[idx+1]?LVS[idx+1].min:ld.max;
     var pct=idx>=LVS.length-1?100:Math.round((feedCount-ld.min)/(next-ld.min)*100);
@@ -878,6 +882,11 @@ var ACHS=[
     {id:'a47',icon:'🐡',name:'河豚猎手',    desc:'钓到河豚',                  stat:'_pufferCaught', target:1,   hidden:true},
     {id:'a48',icon:'🦑',name:'深海传说',    desc:'钓到鱿鱼',                  stat:'_squidCaught',  target:1,   hidden:true},
     /* [EXTEND_ACHS] ← 新成就数据粘贴到这行上面 */
+    // 新功能成就
+    {id:'a49',icon:'🌍',name:'宇宙背包客',  desc:'在全部5个宇宙里各钓过一条鱼',  stat:'_fishAllUniverse',target:1,  hidden:true},
+    {id:'a50',icon:'💧',name:'水分充足',    desc:'下雨时恢复口渴到满',            stat:'_rainFull',       target:1,  hidden:true},
+    {id:'a51',icon:'🏅',name:'初登榜单',    desc:'第一次上传排行榜数据',           stat:'lbUploaded',      target:1,  hidden:false},
+    {id:'a52',icon:'👑',name:'真正的王',    desc:'???',                           stat:'_trueKing',       target:1,  hidden:true},
 ];
 var unlockedAchs=[];
 function getStatVal(stat){
@@ -909,6 +918,10 @@ function getStatVal(stat){
     if(stat==='fishSceneSec')return ST.fishSceneSec||0;
     if(stat==='_pufferCaught')return ST._pufferCaught||0;
     if(stat==='_squidCaught')return ST._squidCaught||0;
+    if(stat==='_trueKing')return (oxLevel>=10 && currentSkin==='crown')?1:0;
+    if(stat==='_rainFull')return ST._rainFull||0;
+    if(stat==='_fishAllUniverse')return (ST._fishUniverse&&Object.keys(ST._fishUniverse).length>=5)?1:0;
+    if(stat==='lbUploaded')return ST.lbUploaded||0;
     return ST[stat]||0;
 }
 function checkAchievements(){
@@ -1249,6 +1262,32 @@ function drawOx(){
     var hy=35+hb;
     ctx.save();
     ctx.translate(12,by);
+
+    // 高等级光晕特效（6级及以上，且未关闭特效）
+    if(!window.fxDisabled){
+        var lvIdx=getLvIdx();
+        if(lvIdx>=5){ // 神牛及以上
+            var glowColors=['#a855f7','#8b5cf6','#7c3aed','#6d28d9','#4c1d95'];
+            var gc=glowColors[Math.min(lvIdx-5,4)];
+            var glowR=4+(lvIdx-5)*2;
+            ctx.save();
+            ctx.shadowColor=gc;
+            ctx.shadowBlur=glowR*3;
+            ctx.globalAlpha=0.35+Math.sin(Date.now()/600)*0.1;
+            ctx.fillStyle=gc;
+            ctx.beginPath();ctx.ellipse(79,90,52,42,0,0,Math.PI*2);ctx.fill();
+            ctx.restore();
+            // 顶部星星粒子
+            if(lvIdx>=7&&Math.random()<0.06){
+                var sx=30+Math.random()*100, sy=10+Math.random()*30;
+                ctx.save();
+                ctx.fillStyle=lvIdx>=9?'#ffd700':'#c4b5fd';
+                ctx.globalAlpha=Math.random()*0.8+0.2;
+                ctx.beginPath();ctx.arc(sx,sy,1.5,0,Math.PI*2);ctx.fill();
+                ctx.restore();
+            }
+        }
+    }
     /* 尾巴 */
     ctx.save();ctx.translate(121,88);ctx.rotate(r2d(A.tailA));
     ctx.fillStyle='#F0EDD0';rr(-4,0,8,32,4);ctx.fill();
@@ -1704,6 +1743,7 @@ function startRain(){
     var rainThirstIv=setInterval(function(){
         if(!isRaining){clearInterval(rainThirstIv);return;}
         thirst=Math.min(100,thirst+3);updateThirstUI();drawWaterTrough();
+        if(thirst>=100){ST._rainFull=1;checkAchievements();}
     },8000);
     /* 90秒后停雨 */
     setTimeout(stopRain,90000);
@@ -2694,6 +2734,9 @@ function doReel(){
         if(fish.icon==='🥾') ST.bootCaught=(ST.bootCaught||0)+1;
         if(fish.icon==='🐡') ST._pufferCaught=1;
         if(fish.icon==='🦑') ST._squidCaught=1;
+        // 各宇宙钓鱼记录
+        if(!ST._fishUniverse) ST._fishUniverse={};
+        ST._fishUniverse[currentUniverse||'normal']=1;
         // 特殊装备掉落
         if(fish.special){
             var dropSkin=SKINS.find(function(s){return s.id===fish.special;});
@@ -3516,55 +3559,62 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '9.8.0';
+var CURRENT_VER = '9.9.0';
 
 // 版本更新弹窗内容（老用户首次打开时显示）
 var VER_POPUP = {
-    emoji:   '🐄',
+    emoji:   '✨',
     title:   '版本更新公告',
     okBtn:   '我知道了 🐄',
-    // warning: 填写后会显示黄色警告框，不需要留空字符串即可
     warning: '',
-    // items: 更新内容列表
     items: [
-        '🎮 等级从5级扩展到10级：小牛犊→牛神',
-        '💧 口渴消耗放缓，吃多汁水果+下雨都可补水',
-        '🔄 喝水后可以连续再次喝水',
-        '✕ 成就和皮肤面板新增关闭按钮',
-        '📝 菜单新增反馈按钮',
-        '🐄 接水果游戏加入牛咪元素',
+        '✨ 高等级小牛新增光晕特效（6级以上）',
+        '🔘 新增特效开关按钮，性能党可关闭',
+        '📏 等级体型调整，满级不再过于庞大',
+        '🏆 新增4个成就,
     ]
 };
 
-// 版本日志（最新版本写最前面，格式：{ver, title, items:[]}）
+// 版本日志（最新版本写最前面）
 var CHANGELOG = [
+    {
+        ver: 'v9.9.0', title: '等级特效 + 新成就',
+        items: [
+            '✨ 6级以上小牛身体出现紫色光晕，等级越高越强',
+            '⭐ 8级以上偶尔有星星粒子，10级（牛神）变成金色',
+            '🔘 等级徽章旁新增✨特效开关按钮（6级解锁）',
+            '📏 等级体型缩放从1.0→2.5压缩为1.0→1.35',
+            '🏆 新增成就：宇宙背包客 / 水分充足 / 初登榜单',
+            '👑 隐藏成就「真正的王」：达到牛神+同时佩戴王冠',
+        ]
+    },
     {
         ver: 'v9.8.0', title: '用户反馈修复 + 体验优化',
         items: [
-            '🎮 等级扩展至10级：小牛犊 / 小牛 / 壮牛 / 大牛 / 牛王 / 神牛 / 传奇牛 / 史诗牛 / 远古牛 / 牛神',
-            '💧 口渴消耗速度减半，吃多汁水果（西瓜/草莓等）可补充水分',
+            '🎮 等级扩展至10级：小牛犊→小牛→壮牛→大牛→牛王→神牛→传奇牛→史诗牛→远古牛→牛神',
+            '💧 口渴消耗速度减半，吃多汁水果可补充水分',
             '🌧️ 下雨时自动缓慢补充水分',
             '🔄 牛在水槽旁可连续喝水，无需移开',
             '✕ 成就面板、皮肤面板新增关闭按钮',
             '📝 菜单新增反馈问卷入口',
-            '🐄 接水果游戏界面加入牛咪元素，结束时根据分数显示不同表情',
+            '🐄 接水果游戏界面加入牛咪元素',
         ]
     },
     {
         ver: 'v9.7.0', title: '排行榜安全更新 + 新手教程',
         items: [
             '🏅 排行榜改为设备锁定，同一设备无法重复刷榜',
-            '🐄 新手教程：新玩家首次打开自动弹出9步引导',
-            '📱 所有功能按钮收纳到右下角🐄菜单，界面更简洁',
+            '📖 新手教程：新玩家首次打开自动弹出9步引导',
+            '📱 所有功能按钮收纳到右下角🐄菜单',
             '📢 网站正式更名为「小牛桌宠」',
         ]
     },
     {
         ver: 'v9.6.0', title: '平行宇宙小游戏差异化 + 全球排行榜',
         items: [
-            '🎣 钓鱼池随宇宙切换：每个宇宙有专属鱼类和物品',
-            '🍎 接水果随宇宙切换：有害物品接到会扣分+红色闪烁',
-            '🏅 全球排行榜：等级/成就/接水果/钓鱼四个维度',
+            '🎣 钓鱼池随宇宙切换，每个宇宙有专属鱼类',
+            '🍎 接水果随宇宙切换，有害物品接到会扣分',
+            '🏅 全球排行榜上线：等级/成就/接水果/钓鱼四维度',
         ]
     },
     {
@@ -3572,22 +3622,15 @@ var CHANGELOG = [
         items: [
             '🎬 四段专属视频：待机 / 抛竿 / 咬钩 / 收竿',
             '🎮 流程重设计：玩家自由决定何时抛竿',
-            '🏆 新增装备：大礼帽 / 海草圈 / 船锚链 / 贝壳冠 / 钓鱼勋章 / 厨师帽 / 👑王冠',
+            '🏆 新增7件装备：大礼帽/海草圈/船锚链/贝壳冠/钓鱼勋章/厨师帽/👑王冠',
         ]
     },
     {
-        ver: 'v9.4.0–9.4.1', title: '独立钓鱼场景 + 成就扩充',
+        ver: 'v9.0.0–9.4.1', title: '平行宇宙 + 钓鱼场景 + 访客扩充',
         items: [
+            '🌍 5个平行宇宙系统',
             '🎣 独立全屏湖边钓鱼场景',
-            '🖼️ 湖泊重绘：深度水体渐变+荷叶+波纹+树木',
-            '🏆 新增5个成就',
-        ]
-    },
-    {
-        ver: 'v9.0.0–9.3.0', title: '平行宇宙 + 访客 + 存档',
-        items: [
-            '🌍 5个平行宇宙：普通农场/赛博/水下/太空/古代',
-            '🐸 青蛙访客 + 访客宇宙变色',
+            '🐸 青蛙/猫咪/兔子/蝴蝶/小鸟访客',
             '💾 本地存档系统',
         ]
     },
@@ -4141,7 +4184,10 @@ function uploadMyScores(){
         {cat:'fish',  value:ST.fishCaught||0,     extra:uniLabel}
     ];
     Promise.all(uploads.map(function(u){ return sbUpsert(name, u.cat, u.value, u.extra); }))
-        .then(function(){ bubble('🏅 已上榜！去看看排名吧', 2500); loadLeaderboard(); })
+        .then(function(){
+            ST.lbUploaded=1; checkAchievements();
+            bubble('🏅 已上榜！去看看排名吧', 2500); loadLeaderboard();
+        })
         .catch(function(){ bubble('上传失败，请检查网络', 2000); });
 }
 
@@ -4151,6 +4197,24 @@ function submitScore(score, game){
     var uniLabel = {normal:'普通农场',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[currentUniverse]||'';
     sbUpsert(name, game, score, uniLabel).catch(function(){});
 }
+
+/* 特效开关 */
+window.fxDisabled = localStorage.getItem('pixelcow_fx_off')==='1';
+(function(){
+    var btn=document.getElementById('fxToggleBtn');
+    if(!btn)return;
+    function updateFxBtn(){
+        btn.textContent=window.fxDisabled?'✨特效(关)':'✨特效';
+        btn.style.opacity=window.fxDisabled?'0.5':'1';
+    }
+    updateFxBtn();
+    btn.addEventListener('click',function(){
+        window.fxDisabled=!window.fxDisabled;
+        localStorage.setItem('pixelcow_fx_off',window.fxDisabled?'1':'0');
+        updateFxBtn();
+        bubble(window.fxDisabled?'特效已关闭':'特效已开启 ✨',1500);
+    });
+})();
 
 /* ═══ 菜单弹出 ═══ */
 var fanOpen = false;
