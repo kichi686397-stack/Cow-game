@@ -74,7 +74,10 @@
         .lv-badge{background:linear-gradient(135deg,#FFD700,#FFA500);color:#fff;font-weight:bold;padding:2px 8px;border-radius:10px;font-size:11px;flex-shrink:0}
         .xp-bar,.thirst-bar{flex:1;height:7px;background:#eee;border-radius:4px;overflow:hidden}
         .xp-fill{height:100%;background:linear-gradient(to right,#66BB6A,#AED581);border-radius:4px;transition:width .6s ease}
-        .thirst-fill{height:100%;background:linear-gradient(to right,#29B6F6,#81D4FA);border-radius:4px;transition:width .6s ease}
+        .work-bar{flex:1;height:7px;background:#eee;border-radius:4px;overflow:hidden}
+        .work-fill{height:100%;background:linear-gradient(to right,#26C6DA,#66BB6A);border-radius:4px;transition:width .3s ease}
+        .hunger-bar{flex:1;height:7px;background:#eee;border-radius:4px;overflow:hidden}
+        .hunger-fill{height:100%;background:linear-gradient(to right,#FF7043,#FFCA28);border-radius:4px;transition:width .6s ease}
         .mood-indicator{display:flex;gap:3px}
         .mood-heart{font-size:17px;transition:transform .2s,opacity .3s}
         .mood-heart.empty{opacity:.2;transform:scale(.8)}
@@ -107,6 +110,7 @@
         .side-btn:active{transform:scale(.96)}
         .side-btn span.fan-label{font-size:9px;color:#888;font-weight:bold;line-height:1}
         .side-btn.new-unlock{animation:skinPulse .7s ease-in-out infinite}
+        #fishBtn.biting{animation:skinPulse .4s ease-in-out infinite;border-color:#f44336}
         @keyframes skinPulse{0%,100%{box-shadow:0 1px 6px rgba(0,0,0,.08)}50%{box-shadow:0 0 0 4px rgba(255,215,0,.5)}}
         /* 教程 */
         #tutOverlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:3000;display:none;align-items:center;justify-content:center}
@@ -319,6 +323,16 @@
             <div class="thirst-bar"><div class="thirst-fill" id="thirstFill" style="width:100%"></div></div>
             <span id="thirstText" style="font-size:11px;color:#aaa;flex-shrink:0">100%</span>
         </div>
+        <div class="status-item" style="gap:6px">
+            <span style="font-size:12px;color:#FF7043">🍖</span>
+            <div class="hunger-bar"><div class="hunger-fill" id="hungerFill" style="width:100%"></div></div>
+            <span id="hungerText" style="font-size:11px;color:#aaa;flex-shrink:0">100%</span>
+        </div>
+        <div class="status-item" style="gap:6px">
+            <span style="font-size:12px;color:#26C6DA">⚡</span>
+            <div class="work-bar"><div class="work-fill" id="workFill" style="width:0%"></div></div>
+            <button id="workBtn" style="font-size:11px;padding:2px 8px;border-radius:8px;border:1.5px solid #26C6DA;background:#e0f7fa;cursor:pointer;color:#00838f;flex-shrink:0">打工</button>
+        </div>
         <div class="status-item">
             <span>心情:</span>
             <div class="mood-indicator" id="moodIndicator">
@@ -416,7 +430,6 @@
     <button class="test-close" id="testCloseBtn">关闭测试模式</button>
 </div>
 
-        #fishBtn.biting{animation:skinPulse .4s ease-in-out infinite;border-color:#f44336}
 
 <!-- 菜单 -->
 <div id="fanMenu">
@@ -496,6 +509,10 @@
         <span>✨ 皮肤道具</span>
         <button onclick="document.getElementById('skinPanel').classList.remove('open')" style="font-size:16px;background:none;border:none;cursor:pointer;color:#bbb;padding:0 2px;line-height:1">✕</button>
     </h4>
+    <div id="appearanceRow" style="display:none;margin-bottom:10px">
+        <div style="font-size:11px;color:#aaa;margin-bottom:5px">🐄 外形等级（可选低级外形）</div>
+        <select id="appearanceSel" style="width:100%;padding:5px 8px;border-radius:8px;border:1.5px solid #eee;font-size:12px;color:#555"></select>
+    </div>
     <div class="skin-grid" id="skinGrid"></div>
     <div class="skin-tip" id="skinTip">喂食解锁更多皮肤</div>
 </div>
@@ -671,6 +688,23 @@ var mood=5, isWalking=false, isEating=false, isSleeping=false;
 var walkDir=1, clickCount=0, clickTimer=null, walkIv=null;
 var feedCount=0, oxLevel=1;
 var thirst=100, isDrinking=false, drinkWalkIv=null;
+var hunger=100, isWorking=false, workTimer=null, workProgress=0;
+function updateHungerUI(){
+    var pct=Math.round(hunger);
+    document.getElementById('hungerFill').style.width=pct+'%';
+    document.getElementById('hungerText').textContent=pct+'%';
+    document.getElementById('hungerFill').style.background=
+        hunger<25?'linear-gradient(to right,#e53935,#ef9a9a)':
+        'linear-gradient(to right,#FF7043,#FFCA28)';
+}
+function updateWorkUI(){
+    document.getElementById('workFill').style.width=Math.round(workProgress)+'%';
+}
+function getAppearanceSc(){
+    var sel=document.getElementById('appearanceSel');
+    if(!sel||sel.options.length===0)return LVS[getLvIdx()].sc;
+    return LVS[parseInt(sel.value)||0].sc;
+}
 var isRaining=false, rainDrops=[], rainIv=null;
 
 /* ═══ 统计数据 ═══ */
@@ -714,6 +748,22 @@ function updateLevel(fromFeed){
     // 6级以上显示特效开关按钮
     var fxBtn=document.getElementById('fxToggleBtn');
     if(fxBtn) fxBtn.style.display = oxLevel>=6 ? '' : 'none';
+    // 3级以上显示外形选择器
+    var appRow=document.getElementById('appearanceRow');
+    var appSel=document.getElementById('appearanceSel');
+    if(appRow&&appSel){
+        appRow.style.display=oxLevel>=3?'':'none';
+        if(oxLevel>=3){
+            var curApp=parseInt(localStorage.getItem('pixelcow_appearance')||getLvIdx());
+            appSel.innerHTML='';
+            for(var li=0;li<oxLevel;li++){
+                var op=document.createElement('option');
+                op.value=li; op.textContent='Lv.'+(li+1)+' '+LVS[li].name;
+                if(li===curApp)op.selected=true;
+                appSel.appendChild(op);
+            }
+        }
+    }
     oxNameEl.textContent=ld.name;
     var next=LVS[idx+1]?LVS[idx+1].min:ld.max;
     var pct=idx>=LVS.length-1?100:Math.round((feedCount-ld.min)/(next-ld.min)*100);
@@ -731,7 +781,7 @@ function updateLevel(fromFeed){
     scheduleSave();
 }
 function applyTx(){
-    var s=LVS[getLvIdx()].sc;
+    var s=getAppearanceSc();
     var d=walkDir>0?-1:1;
     canvas.style.transform='scale('+(d*s)+','+s+')';
     oxCon.style.bottom=Math.round(120-31*s)+'px';
@@ -1263,29 +1313,27 @@ function drawOx(){
     ctx.save();
     ctx.translate(12,by);
 
-    // 高等级光晕特效（6级及以上，且未关闭特效）
-    if(!window.fxDisabled){
-        var lvIdx=getLvIdx();
-        if(lvIdx>=5){ // 神牛及以上
-            var glowColors=['#a855f7','#8b5cf6','#7c3aed','#6d28d9','#4c1d95'];
-            var gc=glowColors[Math.min(lvIdx-5,4)];
-            var glowR=4+(lvIdx-5)*2;
+    // 高等级光晕特效（6级及以上）
+    var lvIdx=getLvIdx();
+    if(!window.fxDisabled && lvIdx>=5){
+        var glowColors=['#a855f7','#8b5cf6','#7c3aed','#6d28d9','#ffd700'];
+        var gc=glowColors[Math.min(lvIdx-5,4)];
+        var glowR=6+(lvIdx-5)*3;
+        ctx.save();
+        ctx.globalCompositeOperation='source-over';
+        ctx.shadowColor=gc;
+        ctx.shadowBlur=glowR*4;
+        ctx.globalAlpha=0.4+Math.sin(Date.now()/600)*0.12;
+        ctx.fillStyle=gc;
+        ctx.beginPath();ctx.ellipse(79,92,54,44,0,0,Math.PI*2);ctx.fill();
+        ctx.shadowBlur=0;ctx.globalAlpha=1;
+        ctx.restore();
+        if(lvIdx>=7&&Math.random()<0.07){
             ctx.save();
-            ctx.shadowColor=gc;
-            ctx.shadowBlur=glowR*3;
-            ctx.globalAlpha=0.35+Math.sin(Date.now()/600)*0.1;
-            ctx.fillStyle=gc;
-            ctx.beginPath();ctx.ellipse(79,90,52,42,0,0,Math.PI*2);ctx.fill();
+            ctx.fillStyle=lvIdx>=9?'#ffd700':'#e9d5ff';
+            ctx.globalAlpha=Math.random()*0.9+0.1;
+            ctx.beginPath();ctx.arc(20+Math.random()*120,5+Math.random()*35,1.8,0,Math.PI*2);ctx.fill();
             ctx.restore();
-            // 顶部星星粒子
-            if(lvIdx>=7&&Math.random()<0.06){
-                var sx=30+Math.random()*100, sy=10+Math.random()*30;
-                ctx.save();
-                ctx.fillStyle=lvIdx>=9?'#ffd700':'#c4b5fd';
-                ctx.globalAlpha=Math.random()*0.8+0.2;
-                ctx.beginPath();ctx.arc(sx,sy,1.5,0,Math.PI*2);ctx.fill();
-                ctx.restore();
-            }
         }
     }
     /* 尾巴 */
@@ -1798,13 +1846,13 @@ var BIRD={state:'hidden',x:0,y:0,offX:60,hopT:0,leaveT:null,wingA:0,wingD:1};
 function spawnBird(){
     if(BIRD.state!=='hidden'||isSleeping||isRaining)return;
     BIRD.state='flying-in';BIRD.x=-60;
-    var r=oxCon.getBoundingClientRect();var s=LVS[getLvIdx()].sc;
+    var r=oxCon.getBoundingClientRect();var s=getAppearanceSc();
     BIRD.y=r.top+150-103*s;BIRD.offX=55+Math.random()*35;
 }
 function updateBird(){
     if(BIRD.state==='hidden'){birdCvs.style.display='none';return;}
     birdCvs.style.display='block';
-    var r=oxCon.getBoundingClientRect();var s=LVS[getLvIdx()].sc;
+    var r=oxCon.getBoundingClientRect();var s=getAppearanceSc();
     var backY=r.top+150-103*s;var tx=r.left+BIRD.offX,ty=backY;
     if(BIRD.state==='flying-in'){
         BIRD.x+=(tx-BIRD.x)*.07;BIRD.y+=(ty-BIRD.y)*.07;
@@ -2194,7 +2242,7 @@ function spawnButterfly(){
     BUT.dir=Math.random()>.5?1:-1;
     BUT.x=BUT.dir>0?-80:window.innerWidth+80;
     BUT.y=window.innerHeight*.25+Math.random()*120;
-    var r=oxCon.getBoundingClientRect();var s=LVS[getLvIdx()].sc;
+    var r=oxCon.getBoundingClientRect();var s=getAppearanceSc();
     BUT._tx=r.left+25*s+10;BUT._ty=r.top+22*s;
     BUT.state='flying-in';BUT.phase=0;BUT.flapT=0;
 }
@@ -2217,7 +2265,7 @@ function updateButterfly(){
             BUT.leaveT=setTimeout(function(){BUT.state='flying-out';},9000+Math.random()*9000);
         }
     } else if(BUT.state==='resting'){
-        var r=oxCon.getBoundingClientRect();var s=LVS[getLvIdx()].sc;
+        var r=oxCon.getBoundingClientRect();var s=getAppearanceSc();
         BUT.x=r.left+25*s+10;BUT.y=r.top+22*s+Math.sin(BUT.phase)*1.5;
     } else if(BUT.state==='flying-out'){
         BUT.x+=BUT.dir*7;BUT.y-=3.5;BUT.y+=Math.sin(BUT.phase*3)*2;
@@ -2993,8 +3041,13 @@ function feed(name){
     if(!c){
         bubble('哞...? 这是什么?',2000);feedCount++;updateLevel(true);checkSkinUnlock();showXpGain(1);setExpr('question',2200);return;
     }
-    showFood(c.icon);bubble(c.msg,2500);
-    var xpGain=c.m>0?c.m:1;feedCount+=xpGain;updateLevel(true);checkSkinUnlock();showXpGain(xpGain);
+    // 吃饱限制
+    if(hunger>=100){bubble('已经吃饱啦！等饿了再来 🐄',1800);return;}
+    showFood(c.icon);
+    var xpGain=c.m>0?c.m:1;
+    feedCount+=xpGain;updateLevel(true);checkSkinUnlock();showXpGain(xpGain);
+    // 喂食增加饱腹值
+    hunger=Math.min(100,hunger+18);updateHungerUI();
 
     // ── 新成就追踪 ──
     // 记录食物种类
@@ -3424,6 +3477,11 @@ setInterval(function(){
     if(!isDrinking){thirst=Math.max(0,thirst-2);updateThirstUI();drawWaterTrough();}  // 从-4改为-2，减慢消耗
     if(thirst<20&&!isSleeping&&!isDrinking)bubble('好渴啊... 想喝水 💧',2000);
 },15000);
+// 饥饿消耗：每30秒 -4
+setInterval(function(){
+    if(!isWorking){hunger=Math.max(0,hunger-4);updateHungerUI();}
+    if(hunger<20&&!isSleeping)bubble('好饿哦... 快喂我吃东西 🍎',2000);
+},30000);
 /* 随机降雨（约10分钟一次机会） */
 setInterval(function(){if(Math.random()<.12&&!isRaining)startRain();},600000);
 setInterval(updateSky,60000);
@@ -3559,25 +3617,35 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '9.9.0';
+var CURRENT_VER = '10.0.0';
 
 // 版本更新弹窗内容（老用户首次打开时显示）
 var VER_POPUP = {
-    emoji:   '✨',
-    title:   '版本更新公告',
+    emoji:   '🍖',
+    title:   '大更新！饥饿系统上线',
     okBtn:   '我知道了 🐄',
     warning: '',
     items: [
-        '✨ 高等级小牛新增光晕特效（6级以上）',
-        '🔘 新增特效开关按钮，性能党可关闭',
-        '📏 等级体型调整，满级不再过于庞大',
-        '🏆 新增4个成就：宇宙背包客 / 水分充足 / 初登榜单 / 👑真正的王（隐藏）',
-        '👑 牛神等级+佩戴王冠可解锁隐藏成就',
+        '🍖 新增饥饿值：定时消耗，吃饱后无法继续刷食物',
+        '⚡ 新增打工：50秒获得XP，需要饥饿&口渴充足才能开始',
+        '🐄 3级以上可以在皮肤面板选择低级外形',
+        '✨ 修复高等级光晕特效不显示的问题',
+        '📱 修复移动端底部CSS乱码',
     ]
 };
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
+    {
+        ver: 'v10.0.0', title: '饥饿系统 + 打工 + 外形选择',
+        items: [
+            '🍖 新增饥饿系统：定时消耗，吃饱后无法继续刷食物',
+            '⚡ 新增打工：50秒获得等级奖励XP，需要饥饿&口渴充足',
+            '🐄 3级以上可在皮肤面板选择低级外形显示',
+            '✨ 修复8级/10级等级光晕不显示的BUG',
+            '📱 修复移动端底部CSS乱码',
+        ]
+    },
     {
         ver: 'v9.9.0', title: '等级特效 + 新成就',
         items: [
@@ -4199,8 +4267,34 @@ function submitScore(score, game){
     sbUpsert(name, game, score, uniLabel).catch(function(){});
 }
 
+/* ═══ 打工系统 ═══ */
+document.getElementById('workBtn').addEventListener('click',function(){
+    if(isWorking){bubble('已经在打工了！',1200);return;}
+    if(hunger<20){bubble('太饿了没力气... 先吃点东西吧 🍎',2000);return;}
+    if(thirst<20){bubble('太渴了没力气... 先喝水吧 💧',2000);return;}
+    isWorking=true; workProgress=0;
+    var btn=document.getElementById('workBtn');
+    btn.textContent='打工中...';btn.style.borderColor='#aaa';btn.style.color='#aaa';
+    bubble('开始打工！努力赚XP 💪',1800); setExpr('happy',1500);
+    workTimer=setInterval(function(){
+        workProgress+=2;updateWorkUI();
+        hunger=Math.max(0,hunger-1);updateHungerUI();
+        thirst=Math.max(0,thirst-0.5);updateThirstUI();drawWaterTrough();
+        if(workProgress>=100){
+            clearInterval(workTimer);isWorking=false;workProgress=0;updateWorkUI();
+            btn.textContent='打工';btn.style.borderColor='#26C6DA';btn.style.color='#00838f';
+            var xpEarn=20+Math.floor(oxLevel*5);
+            feedCount+=xpEarn;updateLevel(true);checkSkinUnlock();showXpGain(xpEarn);
+            bubble('打工完成！获得 '+xpEarn+' XP 🎉',2500);
+            ST.workCount=(ST.workCount||0)+1;checkAchievements();scheduleSave();
+        }
+    },500);
+});
+document.getElementById('appearanceSel').addEventListener('change',function(){
+    localStorage.setItem('pixelcow_appearance',this.value);
+});
+
 /* 特效开关 */
-window.fxDisabled = localStorage.getItem('pixelcow_fx_off')==='1';
 (function(){
     var btn=document.getElementById('fxToggleBtn');
     if(!btn)return;
