@@ -2,7 +2,7 @@
 
 > 一只住在浏览器里的小牛，需要你的照顾～
 
-**[🎮 立即游玩](https://cow-game.kichi686397.workers.dev)** · **[📝 反馈问题](https://mubu.com/doc/d5501245199)**
+**[🎮 立即游玩](https://cow-game.kichi686397.workers.dev)** · **[📝 反馈问题](https://my.feishu.cn/share/base/form/shrcn18D27xAcfrEn5Od1gl0kcf)**
 
 ---
 
