@@ -3924,7 +3924,7 @@ var feedOkBtn=document.getElementById('feedOkBtn');
 function doFeedInput(){
     var txt=feedInput.value.trim();
     if(!txt)return;
-    if(txt.toLowerCase()==='test'){
+    if(txt==='9673'){
         document.getElementById('testPanel').classList.add('open');
         feedInput.value='';
         return;
@@ -3969,8 +3969,8 @@ tBtn('t-stoprain',  function(){ if(isRaining)stopRain(); else bubble('没有在�
 tBtn('t-sleep',     function(){ sleep(); });
 tBtn('t-happy',     function(){ happyJump(); });
 tBtn('t-levelup',   function(){
-    feedCount+=10; updateLevel(true); checkSkinUnlock();
-    bubble('⬆️ +10 经验！',1500);
+    feedCount+=10000; updateLevel(true); checkSkinUnlock();
+    bubble('⬆️ +10000 经验！',1500);
 });
 tBtn('t-unlockall', function(){
     SKINS.forEach(function(s){ if(unlockedSkins.indexOf(s.id)<0)unlockedSkins.push(s.id); });
