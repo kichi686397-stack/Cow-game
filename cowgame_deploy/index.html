@@ -582,6 +582,7 @@
     <button class="side-btn" id="universeBtn">🌍<span class="fan-label">宇宙</span></button>
     <button class="side-btn" id="fishBtn">🎣<span class="fan-label">钓鱼</span></button>
     <button class="side-btn" id="lbBtn">🏅<span class="fan-label">排行榜</span></button>
+    <button class="side-btn" id="feedbackBtn">📝<span class="fan-label">反馈</span></button>
 </div>
 <div id="tutOverlay">
     <div id="tutCard">
@@ -626,15 +627,19 @@
 
 <!-- 皮肤面板 -->
 <div class="skin-panel" id="skinPanel">
-    <h4>✨ 皮肤道具</h4>
+    <h4 style="display:flex;align-items:center;justify-content:space-between;text-align:left">
+        <span>✨ 皮肤道具</span>
+        <button onclick="document.getElementById('skinPanel').classList.remove('open')" style="font-size:16px;background:none;border:none;cursor:pointer;color:#bbb;padding:0 2px;line-height:1">✕</button>
+    </h4>
     <div class="skin-grid" id="skinGrid"></div>
     <div class="skin-tip" id="skinTip">喂食解锁更多皮肤</div>
 </div>
 
 <!-- 成就面板 -->
 <div class="ach-panel" id="achPanel">
-    <h4>🏆 成就
-        <span id="achProgress" style="font-size:11px;color:#aaa;font-weight:normal;margin-left:6px"></span>
+    <h4 style="display:flex;align-items:center;justify-content:space-between">
+        <span>🏆 成就 <span id="achProgress" style="font-size:11px;color:#aaa;font-weight:normal;margin-left:6px"></span></span>
+        <button onclick="document.getElementById('achPanel').classList.remove('open')" style="font-size:16px;background:none;border:none;cursor:pointer;color:#bbb;padding:0 2px;line-height:1">✕</button>
     </h4>
     <div style="height:5px;background:#eee;border-radius:3px;margin-bottom:10px;overflow:hidden">
         <div id="achProgressBar" style="height:100%;background:linear-gradient(to right,#FFD700,#FFA500);border-radius:3px;transition:width .6s ease;width:0%"></div>
@@ -680,13 +685,15 @@
             <button id="gameExitBtn" style="font-size:12px;padding:4px 10px;border-radius:8px;border:1.5px solid #ddd;background:rgba(255,255,255,.9);cursor:pointer;color:#888">✕ 退出</button>
         </div>
         <div class="game-screen" id="gameStartScreen">
-            <h2>🎮 接住食物！</h2>
+            <div style="font-size:56px;margin-bottom:4px">🐄</div>
+            <h2 style="margin:0 0 8px">接住食物！</h2>
             <p>30秒内移动篮子接住掉落的食物<br>鼠标/手指左右拖动篮子接食物<br>每接住一个 +1 XP 喂给小牛 🐄</p>
             <div class="g-best">历史最佳: <span id="gameStartBest">0</span> 个</div>
             <button class="g-action-btn" id="gameStartBtn">开始游戏</button>
             <button class="g-sub-btn" onclick="document.getElementById('gameOverlay').classList.remove('open')">取消</button>
         </div>
         <div class="game-screen" id="gameEndScreen" style="display:none">
+            <div style="font-size:48px;margin-bottom:4px" id="gameEndCow">🐄</div>
             <div class="g-stars" id="gameStars">⭐</div>
             <h2>游戏结束！</h2>
             <p>接住了 <strong id="gameFinalScore" style="font-size:24px;color:#388E3C">0</strong> 个食物</p>
@@ -821,11 +828,16 @@ var ST={
 
 /* ═══ 等级系统 ═══ */
 var LVS=[
-    {min:0,   max:99,  sc:1.0,  name:'小牛犊'},
-    {min:100, max:249, sc:1.12, name:'小牛'},
-    {min:250, max:499, sc:1.25, name:'壮牛'},
-    {min:500, max:999, sc:1.4,  name:'大牛'},
-    {min:1000,max:99999,sc:1.6, name:'牛王'}
+    {min:0,    max:99,   sc:1.0,  name:'小牛犊'},
+    {min:100,  max:249,  sc:1.1,  name:'小牛'},
+    {min:250,  max:499,  sc:1.2,  name:'壮牛'},
+    {min:500,  max:999,  sc:1.35, name:'大牛'},
+    {min:1000, max:1999, sc:1.5,  name:'牛王'},
+    {min:2000, max:3499, sc:1.65, name:'神牛'},
+    {min:3500, max:5999, sc:1.8,  name:'传奇牛'},
+    {min:6000, max:9999, sc:2.0,  name:'史诗牛'},
+    {min:10000,max:19999,sc:2.2,  name:'远古牛'},
+    {min:20000,max:99999,sc:2.5,  name:'牛神'},
 ];
 function getLvIdx(){for(var i=LVS.length-1;i>=0;i--)if(feedCount>=LVS[i].min)return i;return 0;}
 function updateLevel(fromFeed){
@@ -1520,7 +1532,25 @@ function drinkWater(){
     if(isDrinking){return;}
     if(thirst>=90){bubble('水喝够了哞~',1500);return;}
     isDrinking=true;
-    var troughX=80+36; /* water canvas left=80, center=80+36 */
+    var troughX=80+36;
+    var cur=parseInt(oxCon.style.left)||200;
+    // 已经在水槽旁，直接喝
+    if(Math.abs(cur-troughX)<60){
+        bubble('咕嘟咕嘟 💧',2200);
+        A.eating=true;
+        setTimeout(function(){
+            A.eating=false;A.headBob=0;
+            thirst=Math.min(100,thirst+45);
+            mood=Math.min(5,mood+1);setMood();
+            updateThirstUI();drawWaterTrough();
+            isDrinking=false;
+            setAct('闲逛中','😊');
+            ST.drinkCount++;ST.drinkToday++;
+            setExpr('happy',1800);
+            checkAchievements();scheduleSave();
+        },2200);
+        return;
+    }
     setDir(-1);
     if(isWalking)stopWalk();
     isWalking=true;A.walking=true;setAct('去喝水','💧');
@@ -1545,6 +1575,7 @@ function drinkWater(){
                 setExpr('happy',1800);
                 checkAchievements();
                 scheduleSave();
+                // 喝完后可以再次点击继续喝（不需要移开）
             },2200);
         }
     },55);
@@ -1805,6 +1836,11 @@ function startRain(){
     /* 牛反应 */
     bubble('哞！下雨了！',2000);
     setExpr('disgusted',2000);
+    /* 下雨慢慢补水 */
+    var rainThirstIv=setInterval(function(){
+        if(!isRaining){clearInterval(rainThirstIv);return;}
+        thirst=Math.min(100,thirst+3);updateThirstUI();drawWaterTrough();
+    },8000);
     /* 90秒后停雨 */
     setTimeout(stopRain,90000);
     checkAchievements();
@@ -3069,6 +3105,12 @@ function feed(name){
         setExpr('happy',2800);ST.fruitFed++;
         A.happy=true;setTimeout(function(){A.happy=false;A.bounceY=0;},1500);
         for(var i=0;i<5;i++){(function(n){setTimeout(function(){var r=oxCon.getBoundingClientRect();spawnP('star',r.left+40+Math.random()*60,r.top+10);},n*120);})(i);}
+        // 多汁水果补水：西瓜/草莓/苹果/橙子/葡萄
+        var juicyIcons=['🍉','🍓','🍎','🍊','🍇'];
+        if(juicyIcons.indexOf(c.icon)>=0){
+            thirst=Math.min(100,thirst+8);updateThirstUI();drawWaterTrough();
+            bubble(c.msg+' 好多汁！💧',2500);
+        }
     } else if(c.a==='sad'){setExpr('disgusted',2500);canvas.style.filter='grayscale(40%)';setTimeout(function(){canvas.style.filter='';},1600);}
     else if(c.a==='confused'){setExpr('disgusted',2000);canvas.style.filter='hue-rotate(30deg)';setTimeout(function(){canvas.style.filter='';},800);}
     else{setExpr('happy',1500);}
@@ -3429,6 +3471,7 @@ function endGame(basket,moveBasket){
     document.getElementById('gameStars').textContent=stars||'💨';
     document.getElementById('gameFinalScore').textContent=gameScore;
     document.getElementById('gameEndBest').textContent=gameBest;
+    document.getElementById('gameEndCow').textContent=gameScore>=20?'🐄✨':gameScore>=10?'🐄':gameScore>=5?'🐄':gameScore===0?'😢':'🐄';
     gameEndScr.style.display='flex';
     bubble('游戏结束！接住了'+gameScore+'个食物！',2500);
     // 5分以上才提示上榜
@@ -3471,7 +3514,7 @@ setInterval(function(){if(Math.random()<.35&&!isRaining)spawnBird();},45000);
 setInterval(spawnRandomVisitor, 50000);
 /* 口渴每15秒 -4% */
 setInterval(function(){
-    if(!isDrinking){thirst=Math.max(0,thirst-4);updateThirstUI();drawWaterTrough();}
+    if(!isDrinking){thirst=Math.max(0,thirst-2);updateThirstUI();drawWaterTrough();}  // 从-4改为-2，减慢消耗
     if(thirst<20&&!isSleeping&&!isDrinking)bubble('好渴啊... 想喝水 💧',2000);
 },15000);
 /* 随机降雨（约10分钟一次机会） */
@@ -4023,6 +4066,9 @@ document.getElementById('lbBtn').addEventListener('click', function(){
     document.getElementById('lbOverlay').classList.add('open');
     loadLeaderboard();
 });
+document.getElementById('feedbackBtn').addEventListener('click', function(){
+    document.getElementById('feedbackOverlay').classList.add('open');
+});
 document.getElementById('lbRefreshBtn').addEventListener('click', loadLeaderboard);
 document.getElementById('lbUploadBtn').addEventListener('click', uploadMyScores);
 document.getElementById('lbCloseBtn').addEventListener('click', function(){
@@ -4066,19 +4112,24 @@ function loadLeaderboard(){
 function sbUpsert(name, cat, value, extra){
     var deviceId = getDeviceId();
     var enc = encodeURIComponent;
-    var filter = '?device_id=eq.'+enc(deviceId)+'&cat=eq.'+enc(cat);
-    // 只在新值更高时才更新
-    return fetch(SB_URL+'/rest/v1/leaderboard'+filter+'&value=lt.'+value, {
-        method: 'PATCH',
-        headers: SB_HEADERS,
-        body: JSON.stringify({name:name, value:value, extra:extra||null})
-    }).then(function(){
-        // 不存在则插入新记录
-        return fetch(SB_URL+'/rest/v1/leaderboard', {
-            method: 'POST',
-            headers: Object.assign({}, SB_HEADERS, {'Prefer': 'resolution=ignore-duplicates,return=minimal'}),
-            body: JSON.stringify({device_id:deviceId, name:name, cat:cat, value:value, extra:extra||null})
-        });
+    var base = SB_URL+'/rest/v1/leaderboard?device_id=eq.'+enc(deviceId)+'&cat=eq.'+enc(cat);
+    // 名字随时更新（不管分数高低）
+    fetch(base, {
+        method:'PATCH',
+        headers:SB_HEADERS,
+        body:JSON.stringify({name:name})
+    });
+    // 分数只在更高时才更新
+    fetch(base+'&value=lt.'+value, {
+        method:'PATCH',
+        headers:SB_HEADERS,
+        body:JSON.stringify({value:value, extra:extra||null})
+    });
+    // 没有记录则新建
+    return fetch(SB_URL+'/rest/v1/leaderboard', {
+        method:'POST',
+        headers:Object.assign({},SB_HEADERS,{'Prefer':'resolution=ignore-duplicates,return=minimal'}),
+        body:JSON.stringify({device_id:deviceId, name:name, cat:cat, value:value, extra:extra||null})
     });
 }
 
@@ -4130,7 +4181,7 @@ document.getElementById('fanBackdrop').addEventListener('click', function() {
     this.classList.remove('show');
 });
 // 点任意菜单项后收起
-['skinBtn','achBtn','gameBtn','rainBtn','universeBtn','fishBtn','lbBtn'].forEach(function(id){
+['skinBtn','achBtn','gameBtn','rainBtn','universeBtn','fishBtn','lbBtn','feedbackBtn'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.addEventListener('click', function(){
         fanOpen = false;
