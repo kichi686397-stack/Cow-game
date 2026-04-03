@@ -368,171 +368,19 @@
 
 <!-- 版本更新弹窗 -->
 <div class="popup-box" id="newVerPopup" style="padding:28px 36px;min-width:260px;max-width:360px">
-    <div style="font-size:40px;margin-bottom:8px">📢</div>
-    <div style="font-weight:bold;font-size:18px;margin-bottom:4px">版本更新公告</div>
+    <div style="font-size:40px;margin-bottom:8px" id="newVerEmoji">📢</div>
+    <div style="font-weight:bold;font-size:18px;margin-bottom:4px" id="newVerTitle">版本更新公告</div>
     <div style="font-size:13px;color:#888;margin-bottom:10px" id="newVerLabel"></div>
-    <div style="font-size:13px;color:#555;line-height:1.8;margin-bottom:6px;background:#fff8e1;border-radius:10px;padding:10px 12px;border-left:3px solid #ffc107">
-        ⚠️ <b>排行榜已重置</b><br>
-        本次更新修复了排行榜安全问题，旧数据已清空。请重新打开排行榜上传你的数据！
-    </div>
-    <div style="font-size:13px;color:#555;line-height:1.8;margin-bottom:18px">
-        🏅 排行榜防刷新机制上线<br>
-        🐄 网站改名为「小牛桌宠」<br>
-        🖼️ 游戏图标现在是独立文件，方便后续更新<br>
-        🍎 接水果游戏新增退出按钮
-    </div>
-    <button class="pop-ok-btn" onclick="document.getElementById('newVerPopup').classList.remove('show')">知道了，去上传数据 🏅</button>
+    <div id="newVerWarning" style="font-size:13px;color:#555;line-height:1.8;margin-bottom:6px;background:#fff8e1;border-radius:10px;padding:10px 12px;border-left:3px solid #ffc107;display:none"></div>
+    <div id="newVerContent" style="font-size:13px;color:#555;line-height:1.8;margin-bottom:18px"></div>
+    <button class="pop-ok-btn" id="newVerOkBtn" onclick="document.getElementById('newVerPopup').classList.remove('show')">我知道了 🐄</button>
 </div>
 
 <!-- 更新日志弹窗 -->
 <div class="changelog-overlay" id="changelogOverlay">
   <div class="changelog-box">
-    <h2>📋 小牛像素桌宠 版本日志</h2>
-
-    <div class="cl-ver">🎣 v9.5.0–9.5.5 — 钓鱼系统大升级</div>
-    <div class="cl-sub">
-      🎬 四段专属视频：待机 / 抛竿 / 咬钩 / 收竿，完整动态体验<br>
-      🎮 流程重设计：玩家自由决定何时抛竿，不再自动循环<br>
-      🪝 咬钩时切换咬钩视频循环，抓住时机点收竿！<br>
-      🏆 新增装备系统：大礼帽 / 海草圈 / 船锚链 / 贝壳冠 / 钓鱼勋章 / 厨师帽 / 👑王冠（稀有掉落）<br>
-      🧩 模块化注册系统：registerSkin / registerAch / registerFish 可扩展<br>
-      🐛 修复钓完自动抛竿 / 错过后无法抛竿的问题
-    </div>
-
-    <div class="cl-ver">🎣 v9.4.1 — 钓鱼场景重绘 + 新成就</div>
-    <div class="cl-sub">
-      🖼️ 湖泊重绘：深度水体渐变+天空倒影+分层波纹+荷叶脉络+鹅卵石高光+叠层树木+岸边小花<br>
-      🐄 修复场景内牛裂开问题：重写 drawSceneOx，统一坐标系，头身颈部完整衔接<br>
-      🏆 新增5个成就：湖边初探 / 钓鱼达人(20条) / 享受宁静(湖边60秒) / 河豚猎手 / 深海传说
-    </div>
-
-    <div class="cl-ver">🎣 v9.4.0 — 独立钓鱼场景</div>
-    <div class="cl-sub">
-      点击🎣按钮进入全屏湖边钓鱼场景，移除主界面突兀水塘<br>
-      场景包含：天空远山 / 大水塘（波纹+荷叶+涟漪）/ 芦苇 / 岸边大树 / 坐姿小牛 + 鱼竿<br>
-      点「甩竿！」等待浮漂沉下，咬钩后「收竿！」钓上来<br>
-      结果弹窗显示战利品和XP，可连续钓，点「← 离开」返回农场<br>
-      顶部显示今日钓鱼数量
-    </div>
-
-    <div class="cl-ver">🐸🎣 v9.3.0 — 水塘、牛棚风格、成就扩充</div>
-    <div class="cl-sub">
-      🐟 新增水塘：屏幕中央荷叶/石头/波纹/鱼塘标牌，钓鱼走向水塘而非水槽<br>
-      🏠 平行宇宙牛棚专属风格：<br>
-      &nbsp;&nbsp;• 赛博：霓虹线条钢铁仓库 + 霓虹窗<br>
-      &nbsp;&nbsp;• 水下：珊瑚圆拱海底屋 + 舷窗<br>
-      &nbsp;&nbsp;• 太空：金属舱体 + 六角窗 + 太阳能板<br>
-      &nbsp;&nbsp;• 古代：茅草屋顶 + 格子窗 + 门环<br>
-      🐸 青蛙缩小到 72%<br>
-      💧 水桶水位固定不再随口渴变化<br>
-      🎉 新增版本更新弹窗（只对老用户，只弹一次）<br>
-      🏆 新增 7 个成就：第一竿/垂钓爱好者/锦鲤附体/破靴专家/无所事事/追尾巴高手/消遣石头
-    </div>
-
-    <div class="cl-ver">🎣 v9.2.0 — 钓鱼系统 + 无聊系统</div>
-    <div class="cl-sub">
-      🎣 钓鱼小游戏：点右侧🎣按钮出发，牛走到水槽边甩杆<br>
-      &nbsp;&nbsp;• 等待咬钩（浮漂上下晃动），咬钩时按钮闪红 + 感叹号提示<br>
-      &nbsp;&nbsp;• 2.5秒内点击🎣收竿，错过则鱼跑掉<br>
-      &nbsp;&nbsp;• 7种战利品：小鱼/热带鱼/河豚/大虾/鱿鱼/破靴子/💎宝石(稀有)<br>
-      &nbsp;&nbsp;• Canvas 实时绘制鱼竿+鱼线+浮漂动画<br>
-      😪 无聊系统：45秒无互动后随机触发自娱行为<br>
-      &nbsp;&nbsp;• 发呆说话 / 踢石头（物理弹跳）/ 追尾巴转圈<br>
-      &nbsp;&nbsp;• 打哈欠 / 自言自语 / 望天发呆<br>
-      &nbsp;&nbsp;• 任意互动（喂食/摸/遛/钓鱼）重置无聊计时器
-    </div>
-
-    <div class="cl-ver">🐸 v9.1.0 — 青蛙访客</div>
-    <div class="cl-sub">
-      新增青蛙访客：跳跃进场（大弹跳感）、坐姿等候、定时呱叫（喉咙鼓起动画）<br>
-      点击吓跑青蛙，支持全部4个平行宇宙配色<br>
-      加入随机访客调度（1/4概率）、测试面板新增「召唤青蛙」按钮
-    </div>
-
-    <div class="cl-ver">🐛 v9.0.2 — 小猫 BUG 修复</div>
-    <div class="cl-sub">
-      修复猫咪行走时身体颜色不跟随宇宙主题（硬编码 #F5A623 → 改为 CP.body）<br>
-      修复猫咪行走时身体过长（bx 88→74，椭圆半径 42→34，颈部连接块左移对齐）<br>
-      以上两项同时导致「水底宇宙走路时显示原皮橙色」的问题
-    </div>
-
-    <div class="cl-ver">💾 v9.0.1 — 本地存档系统</div>
-    <div class="cl-item">✨ 新功能</div>
-    <div class="cl-sub">
-      💾 自动存档：喂食/喝水/换皮肤/切换宇宙/升级后自动保存到 localStorage<br>
-      &nbsp;&nbsp;• 防抖策略：操作后延迟2秒写入，避免频繁 I/O<br>
-      🔄 自动读档：刷新/重开页面自动还原全部进度<br>
-      &nbsp;&nbsp;• 恢复内容：经验/心情/口渴/皮肤/成就/宇宙/统计数据/游戏最高分<br>
-      &nbsp;&nbsp;• 宇宙静默还原：不触发穿越动画，直接恢复背景<br>
-      &nbsp;&nbsp;• 有存档时显示「欢迎回来！进度已恢复 🐄」<br>
-      🗑️ 测试面板新增「清除存档」按钮（需二次确认）
-    </div>
-
-    <div class="cl-ver">🌍 v9.0.0 — 平行宇宙系统</div>
-    <div class="cl-item">✨ 新功能</div>
-    <div class="cl-sub">
-      🌍 平行宇宙穿越系统：右下角 🌍 按钮，5个宇宙可自由切换<br>
-      &nbsp;&nbsp;• 🌿 普通农场（默认）<br>
-      &nbsp;&nbsp;• 🌃 赛博朋克：霓虹扫描线+电路格、品红草地、牛变紫色<br>
-      &nbsp;&nbsp;• 🌊 深海水下：气泡特效、珊瑚海草、牛变蓝绿色<br>
-      &nbsp;&nbsp;• 🚀 太空站：星尘漂浮、金属地面、星空背景<br>
-      &nbsp;&nbsp;• 🏯 古代农村：暖橙天空、棕褐地面、牛加复古滤镜<br>
-      🎨 访客宇宙主题变色：猫/兔/蝴蝶随宇宙变换外观配色<br>
-      &nbsp;&nbsp;• 赛博猫：霓虹紫+青色光环；水下猫：蓝绿色；太空猫：银白头盔；古代猫：棕褐<br>
-      &nbsp;&nbsp;• 同理兔子、蝴蝶均有4套宇宙专属配色<br>
-      🏅 新增5个宇宙成就：霓虹漫步/深海漫游/星际旅行者/时光旅人/宇宙探险家<br>
-      ⚡ 穿越动画：白光闪烁 + 宇宙名称浮现 + 牛开心跳反应
-    </div>
-
-    <div class="cl-ver">🐛 v8.0.1 — BUG 修复补丁</div>
-    <div class="cl-sub">
-      修复猫咪离开时倒着走（facingLeft 方向判断取反）<br>
-      修复猫耳错位（整体左移6px对齐头顶）<br>
-      修复猫行走速度过快/裂开（bob频率 ph×8→ph×4，加颈部椭圆连接）<br>
-      修复兔耳过高（translate y: cy-30→cy-18）<br>
-      修复小游戏无下落动画（gh append后计算+Math.max保底）<br>
-      修复彩虹渲染错误（conic-gradient→Canvas arc绘制）<br>
-      修复 sniffing 变量悬空报错（清除历次残留函数体）
-    </div>
-
-    <div class="cl-ver">🎉 v8.0.0 — 功能大更新</div>
-    <div class="cl-item">✨ 新功能</div>
-    <div class="cl-sub">
-      🎮 迷你游戏：移动篮子接食物，30秒计时，三星评级<br>
-      💧 喝水/口渴系统：水槽+口渴值，点击自动走去喝水<br>
-      🏆 成就系统：12个成就含进度条，解锁弹窗通知<br>
-      🌧️ 下雨天：云朵+雨滴动画，雨停后Canvas彩虹<br>
-      🐱 猫咪访客：走路/坐下两姿态，可点击吓跑<br>
-      🐇 兔子访客：蹦蹦跳跳，鼻子嗅探，会偷胡萝卜<br>
-      🦋 蝴蝶访客：4种随机配色，停在角上扇翅<br>
-      🛠️ 测试模式（输入 test）、⌨️ 输入框喂食恢复<br>
-      🌍 等级&皮肤解锁阈值 ×10（防止升级太快）
-    </div>
-
-    <div class="cl-ver">🌙 v7.0.0 — 系统性功能更新</div>
-    <div class="cl-sub">
-      📈 等级/体型系统（5级成长），🏃 遛牛长按拖拽<br>
-      🌙 日夜循环+牛棚，🐦 小鸟访客，✨ 7套皮肤系统<br>
-      😄 表情系统（开心/无语/问号气泡）
-    </div>
-
-    <div class="cl-ver">🌿 v6.0.0 — 基础 BUG 修复</div>
-    <div class="cl-sub">修复行走方向、前景草遮挡、恢复输入框、15种食物按钮整合</div>
-
-    <div class="cl-ver">🖼️ v5.0.0 — Canvas 核心重构</div>
-    <div class="cl-sub">
-      整头牛改用 Canvas 绘制，彻底解决 GPU 合成层裂开<br>
-      所有动画改为 requestAnimationFrame 控制
-    </div>
-
-    <div class="cl-ver">🐣 v1.0.0 ~ v4.0.0 — 原版迭代</div>
-    <div class="cl-sub">
-      v1: HTML/CSS div 拼接小牛，基础喂食/心情/走路/睡觉<br>
-      v2: 修复 transform 动画冲突（eating × happy 同时触发）<br>
-      v3: 修复食物 z-index 遮挡，food 改 fixed 定位<br>
-      v4: 修复 eating 动画 rotate 裂开，改为纯 translateY 点头
-    </div>
-
+    <h2>📋 小牛桌宠 版本日志</h2>
+    <div id="changelogContent"></div>
     <button class="changelog-close" onclick="document.getElementById('changelogOverlay').classList.remove('open')">知道了，感谢主包！🎉</button>
   </div>
 </div>
@@ -3648,15 +3496,138 @@ setMood();
 renderSkinGrid();
 renderAchPanel();
 
-// 版本更新弹窗（只在内容更新版本且首次打开时弹）
-var CURRENT_VER='9.7.0';
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 📝 版本配置区 — 每次更新只需修改这里
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+var CURRENT_VER = '9.8.0';
+
+// 版本更新弹窗内容（老用户首次打开时显示）
+var VER_POPUP = {
+    emoji:   '🐄',
+    title:   '版本更新公告',
+    okBtn:   '我知道了 🐄',
+    // warning: 填写后会显示黄色警告框，不需要留空字符串即可
+    warning: '',
+    // items: 更新内容列表
+    items: [
+        '🎮 等级从5级扩展到10级：小牛犊→牛神',
+        '💧 口渴消耗放缓，吃多汁水果+下雨都可补水',
+        '🔄 喝水后可以连续再次喝水',
+        '✕ 成就和皮肤面板新增关闭按钮',
+        '📝 菜单新增反馈按钮',
+        '🐄 接水果游戏加入牛咪元素',
+    ]
+};
+
+// 版本日志（最新版本写最前面，格式：{ver, title, items:[]}）
+var CHANGELOG = [
+    {
+        ver: 'v9.8.0', title: '用户反馈修复 + 体验优化',
+        items: [
+            '🎮 等级扩展至10级：小牛犊 / 小牛 / 壮牛 / 大牛 / 牛王 / 神牛 / 传奇牛 / 史诗牛 / 远古牛 / 牛神',
+            '💧 口渴消耗速度减半，吃多汁水果（西瓜/草莓等）可补充水分',
+            '🌧️ 下雨时自动缓慢补充水分',
+            '🔄 牛在水槽旁可连续喝水，无需移开',
+            '✕ 成就面板、皮肤面板新增关闭按钮',
+            '📝 菜单新增反馈问卷入口',
+            '🐄 接水果游戏界面加入牛咪元素，结束时根据分数显示不同表情',
+        ]
+    },
+    {
+        ver: 'v9.7.0', title: '排行榜安全更新 + 新手教程',
+        items: [
+            '🏅 排行榜改为设备锁定，同一设备无法重复刷榜',
+            '🐄 新手教程：新玩家首次打开自动弹出9步引导',
+            '📱 所有功能按钮收纳到右下角🐄菜单，界面更简洁',
+            '📢 网站正式更名为「小牛桌宠」',
+        ]
+    },
+    {
+        ver: 'v9.6.0', title: '平行宇宙小游戏差异化 + 全球排行榜',
+        items: [
+            '🎣 钓鱼池随宇宙切换：每个宇宙有专属鱼类和物品',
+            '🍎 接水果随宇宙切换：有害物品接到会扣分+红色闪烁',
+            '🏅 全球排行榜：等级/成就/接水果/钓鱼四个维度',
+        ]
+    },
+    {
+        ver: 'v9.5.0–9.5.5', title: '钓鱼系统大升级',
+        items: [
+            '🎬 四段专属视频：待机 / 抛竿 / 咬钩 / 收竿',
+            '🎮 流程重设计：玩家自由决定何时抛竿',
+            '🏆 新增装备：大礼帽 / 海草圈 / 船锚链 / 贝壳冠 / 钓鱼勋章 / 厨师帽 / 👑王冠',
+        ]
+    },
+    {
+        ver: 'v9.4.0–9.4.1', title: '独立钓鱼场景 + 成就扩充',
+        items: [
+            '🎣 独立全屏湖边钓鱼场景',
+            '🖼️ 湖泊重绘：深度水体渐变+荷叶+波纹+树木',
+            '🏆 新增5个成就',
+        ]
+    },
+    {
+        ver: 'v9.0.0–9.3.0', title: '平行宇宙 + 访客 + 存档',
+        items: [
+            '🌍 5个平行宇宙：普通农场/赛博/水下/太空/古代',
+            '🐸 青蛙访客 + 访客宇宙变色',
+            '💾 本地存档系统',
+        ]
+    },
+    {
+        ver: 'v7.0.0–8.0.1', title: '功能大更新',
+        items: [
+            '🎮 接水果迷你游戏',
+            '💧 喝水/口渴系统',
+            '🏆 成就系统',
+            '🌧️ 下雨天 + 彩虹',
+            '🐱🐇🦋 猫咪/兔子/蝴蝶访客',
+        ]
+    },
+    {
+        ver: 'v1.0.0–6.0.0', title: '早期迭代',
+        items: [
+            '🖼️ v5: Canvas 核心重构，解决裂开问题',
+            '🐣 v1~v4: 基础喂食/心情/走路/睡觉',
+        ]
+    },
+];
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 以下代码自动根据配置渲染，无需修改
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+// 渲染版本日志
+(function(){
+    var html = '';
+    CHANGELOG.forEach(function(entry){
+        html += '<div class="cl-ver">' + entry.ver + ' — ' + entry.title + '</div>';
+        html += '<div class="cl-sub">';
+        entry.items.forEach(function(item){ html += item + '<br>'; });
+        html += '</div>';
+    });
+    var el = document.getElementById('changelogContent');
+    if(el) el.innerHTML = html;
+})();
+
 var VER_KEY='pixelcow_seen_ver';
 var seenVer=localStorage.getItem(VER_KEY)||'0';
 if(seenVer!==CURRENT_VER){
     localStorage.setItem(VER_KEY,CURRENT_VER);
-    if(hasSave){ // 老用户才弹，新用户直接问候
+    if(hasSave){
         setTimeout(function(){
-            document.getElementById('newVerLabel').textContent='v'+CURRENT_VER;
+            document.getElementById('newVerLabel').textContent = 'v'+CURRENT_VER;
+            document.getElementById('newVerEmoji').textContent = VER_POPUP.emoji;
+            document.getElementById('newVerTitle').textContent = VER_POPUP.title;
+            document.getElementById('newVerOkBtn').textContent = VER_POPUP.okBtn;
+            var warn = document.getElementById('newVerWarning');
+            if(VER_POPUP.warning){
+                warn.innerHTML = VER_POPUP.warning;
+                warn.style.display = '';
+            }
+            document.getElementById('newVerContent').innerHTML =
+                VER_POPUP.items.map(function(i){ return i+'<br>'; }).join('');
             document.getElementById('newVerPopup').classList.add('show');
         },1200);
     }
@@ -4180,15 +4151,17 @@ document.getElementById('fanBackdrop').addEventListener('click', function() {
     menuPopup.classList.remove('open');
     this.classList.remove('show');
 });
-// 点任意菜单项后收起
+// 点任意菜单项后收起（setTimeout 0 让按钮自己的事件先执行完）
 ['skinBtn','achBtn','gameBtn','rainBtn','universeBtn','fishBtn','lbBtn','feedbackBtn'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.addEventListener('click', function(){
-        fanOpen = false;
-        document.getElementById('fanToggle').classList.remove('open');
-        menuPopup.classList.remove('open');
-        document.getElementById('fanBackdrop').classList.remove('show');
-    }, true);
+        setTimeout(function(){
+            fanOpen = false;
+            document.getElementById('fanToggle').classList.remove('open');
+            menuPopup.classList.remove('open');
+            document.getElementById('fanBackdrop').classList.remove('show');
+        }, 0);
+    });
 });
 
 /* ═══ 新手教程 ═══ */
