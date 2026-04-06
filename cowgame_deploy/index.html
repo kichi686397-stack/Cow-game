@@ -3615,7 +3615,8 @@ function saveGame(){
                 gameMissAll:ST.gameMissAll,
                 fishCaught:ST.fishCaught||0, _gemCaught:ST._gemCaught||0,
                 bootCaught:ST.bootCaught||0, boredCount:ST.boredCount||0,
-                spinCount:ST.spinCount||0, kickCount:ST.kickCount||0
+                spinCount:ST.spinCount||0, kickCount:ST.kickCount||0,
+                farmBestA:ST.farmBestA||0, farmBestB:ST.farmBestB||0
             },
             savedAt:Date.now()
         };
@@ -4406,25 +4407,30 @@ function loadLeaderboard(){
                 list.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">暂无记录<br>快来第一个上榜！🐄</div>';
                 return;
             }
-            var cfg = LB_CATS[lbCurrentCat];
-            var medals = ['🥇','🥈','🥉'];
             var myName = localStorage.getItem('pixelcow_lbname')||'';
-            var html = '<div style="font-size:11px;color:#aaa;margin-bottom:8px;text-align:center">'+cfg.hint+'</div>';
-            html += '<table style="width:100%;border-collapse:collapse">';
+            list.innerHTML = '<div style="font-size:11px;color:#aaa;margin-bottom:8px;text-align:center">'+cfg.hint+'</div>';
             rows.forEach(function(s, i){
+                var rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
                 var isMe = myName && s.name === myName;
-                var bg = isMe ? '#e3f2fd' : (i<3 ? ['#fffde7','#f5f5f5','#fff3e0'][i] : '');
                 var sub = cfg.desc(s);
-                html += '<tr style="background:'+bg+';border-bottom:1px solid #f0f0f0">';
-                html += '<td style="padding:8px 6px;font-weight:bold;font-size:15px;width:32px">'+(medals[i]||(i+1))+'</td>';
-                html += '<td><div style="font-weight:'+(i<3||isMe?'bold':'normal')+(isMe?';color:#1976d2':'')+'">' +s.name+(isMe?' 👈':'')+'</div>'+(sub?'<div style="font-size:10px;color:#aaa">'+sub+'</div>':'')+'</td>';
-                // farm_b 存的是 time*10 整数，显示时还原为秒
+                var avatar = getAvatar(s.name);
                 var displayVal = (lbCurrentCat === 'farm_b') ? (s.value/10).toFixed(1) : s.value;
-                html += '<td style="text-align:right;font-weight:bold;color:'+(i===0?'#f9a825':i===1?'#78909c':i===2?'#a1887f':'#1976d2')+';padding-right:4px;white-space:nowrap">'+displayVal+' <span style="font-size:10px;font-weight:normal;color:#aaa">'+cfg.unit+'</span></td>';
-                html += '</tr>';
+                var div = document.createElement('div');
+                div.className = 'lb-item ' + rankClass + (isMe?' lb-me':'');
+                if(isMe) div.style.cssText += 'outline:2px solid #1976d2';
+                div.innerHTML =
+                    '<div style="display:flex;align-items:center;gap:6px;overflow:hidden;max-width:calc(100% - 74px)">' +
+                        '<span style="flex-shrink:0">' + avatar + '</span>' +
+                        '<div style="min-width:0;overflow:hidden">' +
+                            '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:' + (i<3||isMe?'bold':'normal') + (isMe?';color:#1976d2':'') + '">' +
+                                (i+1) + '. ' + s.name + (isMe?' 👈':'') + (i===0?' 👑':'') +
+                            '</div>' +
+                            (sub?'<div style="font-size:10px;color:#aaa;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+sub+'</div>':'') +
+                        '</div>' +
+                    '</div>' +
+                    '<span style="flex-shrink:0;font-weight:bold;color:'+(i===0?'#f9a825':i===1?'#78909c':i===2?'#a1887f':'#1976d2')+'">' + displayVal + ' <span style="font-size:10px;font-weight:normal;color:#aaa">' + cfg.unit + '</span></span>';
+                list.appendChild(div);
             });
-            html += '</table>';
-            list.innerHTML = html;
         })
         .catch(function(){
             list.innerHTML = '<div style="text-align:center;padding:40px;color:#e53935">连接失败 😢</div>';
@@ -4475,15 +4481,19 @@ function uploadMyScores(){
     var lvName = LVS[getLvIdx()].name;
     var uniLabel = {normal:'普通农场',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[currentUniverse]||'';
     var uploads = [
-        {cat:'level', value:feedCount,           extra:'Lv.'+oxLevel+' '+lvName},
-        {cat:'ach',   value:unlockedAchs.length, extra:unlockedAchs.length+'/'+ACHS.length+'个'},
+        {cat:'level', value:feedCount,            extra:'Lv.'+oxLevel+' '+lvName},
+        {cat:'ach',   value:unlockedAchs.length,  extra:unlockedAchs.length+'/'+ACHS.length+'个'},
         {cat:'fruit', value:ST.gameMaxScore||0,   extra:uniLabel},
-        {cat:'fish',  value:ST.fishCaught||0,     extra:uniLabel}
+        {cat:'fish',  value:ST.fishCaught||0,     extra:uniLabel},
+        {cat:'farm_a',value:ST.farmBestA||0,      extra:uniLabel},
+        {cat:'farm_b',value:ST.farmBestB||0,      extra:uniLabel}
     ];
     Promise.all(uploads.map(function(u){ return sbUpsert(name, u.cat, u.value, u.extra); }))
         .then(function(){
             ST.lbUploaded=1; checkAchievements();
-            bubble('🏅 已上榜！去看看排名吧', 2500); loadLeaderboard();
+            bubble('🏅 已上榜！去看看排名吧', 2500);
+            if(lbCurrentCat === 'farm') loadFarmDual();
+            else loadLeaderboard();
         })
         .catch(function(){ bubble('上传失败，请检查网络', 2000); });
 }
@@ -4525,22 +4535,14 @@ window.addEventListener('message', function(e){
         showXpGain(xp);
         bubble('打工完成！获得 '+xp+' XP 🎉', 2500);
         ST.workCount = (ST.workCount||0)+1;
+        if(mode === 'A'){
+            ST.farmBestA = Math.max(ST.farmBestA||0, score||0);
+        } else if(mode === 'B' && timeVal !== null){
+            var timeScore = Math.round(parseFloat(timeVal) * 10); // 存整数（0.1秒精度）
+            if(!ST.farmBestB || timeScore < ST.farmBestB) ST.farmBestB = timeScore;
+        }
         checkAchievements();
         scheduleSave();
-        // 自动上传排行榜（有名字才传）
-        var name = localStorage.getItem('pixelcow_lbname');
-        if(name){
-            var uniLabel = {normal:'普通农场',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[currentUniverse]||'';
-            if(mode === 'A'){
-                // 限时模式：分数越高越好
-                sbUpsert(name, 'farm_a', score, uniLabel);
-            } else if(mode === 'B' && timeVal !== null){
-                // 计时模式：时间越短越好，用 10000-time*10 转成正向分数存储
-                // 实际显示时再转回来
-                var timeScore = Math.round(parseFloat(timeVal) * 10); // 存整数（0.1秒精度）
-                sbUpsert(name, 'farm_b', timeScore, uniLabel);
-            }
-        }
     }
 });
 
