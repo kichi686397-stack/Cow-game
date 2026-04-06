@@ -83,10 +83,6 @@
         .mood-heart{font-size:17px;transition:transform .2s,opacity .3s}
         .mood-heart.empty{opacity:.2;transform:scale(.8)}
         /* 提示 */
-        .hint{position:fixed;top:20px;right:20px;background:rgba(255,255,255,.95);padding:16px 20px;border-radius:16px;font-size:13px;box-shadow:0 4px 20px rgba(0,0,0,.1);z-index:100}
-        .hint h3{margin-bottom:10px;color:#8B4513;font-size:14px}
-        .hint ul{list-style:none}
-        .hint li{margin:5px 0;color:#555}
         /* 食物按钮 */
         .food-buttons-wrap{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:100;max-width:72vw}
         .food-buttons-wrap::before,.food-buttons-wrap::after{content:'';position:absolute;top:0;bottom:0;width:22px;z-index:1;pointer-events:none}
@@ -354,15 +350,34 @@
         <div class="status-item"><span id="actIcon">😊</span><span id="actText">闲逛中</span></div>
     </div>
 
-    <div class="hint">
-        <h3>🍀 互动指南</h3>
-        <ul>
-            <li>👆 单击 摸摸</li>
-            <li>👆👆 双击 遛弯</li>
-            <li>🖱️ 长按拖拽 遛牛</li>
-            <li>💧 点水槽 喝水</li>
-            <li>🎮🏆🌦️ 右下角更多</li>
-        </ul>
+    <!-- 右上角小菜单（互动指南 + 版本公告） -->
+    <div id="infoMenuWrap" style="position:fixed;top:20px;right:20px;z-index:300">
+        <button id="infoMenuBtn" title="帮助与公告"
+            style="width:36px;height:36px;border-radius:50%;border:1.5px solid #ddd;background:rgba(255,255,255,.95);
+            font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center">
+            🍀
+        </button>
+        <div id="infoMenuPanel" style="display:none;position:absolute;top:44px;right:0;background:#fff;
+            border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.15);padding:14px 16px;min-width:200px;font-size:13px">
+            <div style="font-weight:bold;color:#8B4513;margin-bottom:8px">🍀 互动指南</div>
+            <div style="color:#555;line-height:2">
+                👆 单击 — 摸摸<br>
+                👆👆 双击 — 遛弯<br>
+                🖱️ 长按拖拽 — 遛牛<br>
+                💧 点水槽 — 喝水<br>
+                🎮 右下角🐄 — 更多功能
+            </div>
+            <div style="height:1px;background:#eee;margin:10px 0"></div>
+            <button onclick="document.getElementById('infoMenuPanel').style.display='none';document.getElementById('changelogOverlay').classList.add('open')"
+                style="width:100%;padding:7px;border-radius:10px;background:#f5f5f5;border:1.5px solid #eee;cursor:pointer;font-size:12px;color:#666">
+                📋 查看版本日志
+            </button>
+            <button id="infoVerBtn"
+                style="width:100%;padding:7px;border-radius:10px;background:#fff8e1;border:1.5px solid #ffc107;cursor:pointer;font-size:12px;color:#888;margin-top:6px"
+                onclick="document.getElementById('infoMenuPanel').style.display='none';document.getElementById('newVerPopup').classList.add('show')">
+                📢 查看版本公告
+            </button>
+        </div>
     </div>
 
     <div class="food-buttons-wrap">
@@ -469,17 +484,17 @@
       扫码告诉我们，每条反馈都会认真看！🐄
     </p>
     <img 
-  src="feedback-qrcode.png"
-  style="width:200px;height:200px;object-fit:contain;
-         border-radius:12px;border:1.5px solid #eee;margin-bottom:12px">
-    <p style="font-size:11px;color:#bbb;margin:0 0 18px">微信扫一扫 · 飞书多维表格</p>
-    <button 
-  style="width:100%;padding:10px 0;border:none;border-radius:8px;
+        src="feedback-qrcode.png"
+        loading="lazy"
+         style="width:200px;height:200px;...">
+   <p style="font-size:11px;color:#bbb;margin:0 0 18px">微信扫一扫 · 飞书多维表格</p>
+   <button 
+        style="width:100%;padding:10px 0;border:none;border-radius:8px;
          background:#4CAF50;color:#fff;font-size:14px;margin-bottom:10px;
          cursor:pointer"
-  onclick="window.open('https://my.feishu.cn/share/base/form/shrcn18D27xAcfrEn5Od1gl0kcf')"
+         onclick="window.open('https://my.feishu.cn/share/base/form/shrcn18D27xAcfrEn5Od1gl0kcf')"
 >
-  👉 点击填写反馈
+            👉 点击填写反馈
 </button>
     <button class="pop-ok-btn" onclick="document.getElementById('feedbackOverlay').classList.remove('open')">关闭</button>
   </div>
@@ -519,17 +534,23 @@
       <button class="lb-tab"        id="lbTab-ach">🏆 成就</button>
       <button class="lb-tab"        id="lbTab-fruit">🍎 接水果</button>
       <button class="lb-tab"        id="lbTab-fish">🎣 钓鱼</button>
-      <button class="lb-tab"        id="lbTab-farm">🌾 耕地</button>
+      <button class="lb-tab"        id="lbTab-farm">🌾⚡ 耕地</button>
     </div>
     <div id="lbList" style="min-height:200px;font-size:13px"></div>
     <div id="lbFarmGrid" style="display:none">
+      <!-- 标题行可点击切换高亮 -->
+      <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:10px;font-size:14px;font-weight:bold">
+        <span id="farmTitleB" style="cursor:pointer;padding:4px 10px;border-radius:10px;transition:all .2s;background:#e3f2fd;color:#1976d2">⚡ 闪电耕作</span>
+        <span style="color:#ccc">/</span>
+        <span id="farmTitleA" style="cursor:pointer;padding:4px 10px;border-radius:10px;transition:all .2s;color:#aaa">🌾 丰收竞赛</span>
+      </div>
       <div class="farm-grid">
         <div class="farm-col">
-          <div class="farm-title">⚡ 闪电耕作<br><small style="font-weight:normal;color:#888">最短时间</small></div>
+          <div style="font-size:10px;text-align:center;color:#aaa;margin-bottom:6px">时间越短越好</div>
           <div id="farmBList"></div>
         </div>
         <div class="farm-col">
-          <div class="farm-title">🌾 丰收竞赛<br><small style="font-weight:normal;color:#888">30秒最高分</small></div>
+          <div style="font-size:10px;text-align:center;color:#aaa;margin-bottom:6px">分数越高越好</div>
           <div id="farmAList"></div>
         </div>
       </div>
@@ -763,10 +784,6 @@ var ST={
     petCount:0, walkCount:0, sleepCount:0, drinkCount:0,
     birdCount:0, rainCount:0, gameMaxScore:0, fruitFed:0,
     catCount:0, rabbitCount:0, butterflyCount:0, visitorTotal:0,
-    frogCount:0, frogCountToday:0,
-    workCount:0,
-    lbUploaded:0,
-    lbUploadedCount:0,
     universeVisited:{}, universeCount:0,
     veggFed:0,          // 纯素食物（草/蔬菜/干草/胡萝卜/玉米）
     junkStreak:0,       // 连续喂怪东西（骨头/肉/披萨）次数
@@ -777,21 +794,7 @@ var ST={
     gameMissAll:false,  // 本局小游戏一个没接到
     openHour:new Date().getHours(), // 打开游戏时的小时
     drinkToday:0,       // 今日喝水次数
-    universeFeeds:{},   // 在各宇宙内喂食过的记录
-    _secret:0,
-    _birdAndBfly:0,
-    _gemCaught:0,
-    _pufferCaught:0,
-    _squidCaught:0,
-    _rainFull:0,
-    _fishUniverse:{},
-    fishCaught:0,
-    bootCaught:0,
-    boredCount:0,
-    spinCount:0,
-    kickCount:0,
-    fishSceneVisit:0,
-    fishSceneSec:0
+    universeFeeds:{}    // 在各宇宙内喂食过的记录
 };
 
 /* ═══ 等级系统 ═══ */
@@ -947,92 +950,71 @@ renderSkinGrid();
 /* ═══ 成就系统 ═══ */
 var ACHS=[
     /* ── 普通成就 ── */
-    {id:'a1', icon:'🌱',name:'初次喂食',    desc:'第一次喂食',               stat:'feedCount',       target:1,   hidden:false},
-    {id:'a2', icon:'🥕',name:'素食主义者',  desc:'累计喂食 20 次',            stat:'feedCount',       target:20,  hidden:false},
-    {id:'a3', icon:'🚜',name:'农场主',      desc:'累计喂食 60 次',            stat:'feedCount',       target:60,  hidden:false},
-    {id:'a4', icon:'🤝',name:'摸摸达人',    desc:'摸牛 10 次',                stat:'petCount',        target:10,  hidden:false},
-    {id:'a5', icon:'🏃',name:'遛牛健将',    desc:'遛牛 5 次',                 stat:'walkCount',       target:5,   hidden:false},
-    {id:'a6', icon:'😴',name:'安眠奖',      desc:'睡觉 3 次',                 stat:'sleepCount',      target:3,   hidden:false},
-    {id:'a7', icon:'💧',name:'爱喝水',      desc:'喝水 5 次',                 stat:'drinkCount',      target:5,   hidden:false},
-    {id:'a8', icon:'🐦',name:'交新朋友',    desc:'小鸟来访一次',              stat:'birdCount',       target:1,   hidden:false},
-    {id:'a9', icon:'🌧️',name:'雨中漫步',   desc:'经历一次下雨',              stat:'rainCount',       target:1,   hidden:false},
-    {id:'a10',icon:'🎮',name:'游戏达人',    desc:'迷你游戏接住 15 个',        stat:'gameMaxScore',    target:15,  hidden:false},
-    {id:'a11',icon:'🍎',name:'水果狂热者',  desc:'喂喜爱食物 20 次',          stat:'fruitFed',        target:20,  hidden:false},
-    {id:'a12',icon:'👑',name:'牛王驾到',    desc:'达到最高等级',              stat:'oxLevel',         target:10,  hidden:false},
-    {id:'a13',icon:'🐾',name:'动物朋友',    desc:'累计访客 5 次',             stat:'visitorTotal',    target:5,   hidden:false},
-    {id:'a14',icon:'🎪',name:'人气王',      desc:'猫咪兔子蝴蝶都来过',        stat:'visitorKind',     target:3,   hidden:false},
-    {id:'a16',icon:'🌃',name:'霓虹漫步',    desc:'进入赛博朋克宇宙',          stat:'_cyber',          target:1,   hidden:false},
-    {id:'a17',icon:'🌊',name:'深海漫游',    desc:'进入水下宇宙',              stat:'_ocean',          target:1,   hidden:false},
-    {id:'a18',icon:'🚀',name:'星际旅行者',  desc:'进入太空宇宙',              stat:'_space',          target:1,   hidden:false},
-    {id:'a19',icon:'🏯',name:'时光旅人',    desc:'进入古代农村宇宙',          stat:'_ancient',        target:1,   hidden:false},
-    {id:'a20',icon:'🌀',name:'宇宙探险家',  desc:'访问全部 4 个平行宇宙',     stat:'universeCount',   target:4,   hidden:false},
-    {id:'a21',icon:'🥗',name:'纯素主义',    desc:'累计喂纯素食物 50 次',      stat:'veggFed',         target:50,  hidden:false},
-    {id:'a22',icon:'🍱',name:'美食家',      desc:'喂过全部 15 种食物',        stat:'allFoodKind',     target:15,  hidden:false},
-    {id:'a23',icon:'🔭',name:'宇宙初探',    desc:'第一次穿越平行宇宙',        stat:'universeCount',   target:1,   hidden:false},
-    {id:'a24',icon:'🏃',name:'停不下来',    desc:'一天内遛牛 10 次',          stat:'dailyWalkCount',  target:10,  hidden:false},
-    {id:'a25',icon:'🐟',name:'水桶牛',      desc:'单日喝水 3 次',             stat:'drinkToday',      target:3,   hidden:false},
-    {id:'a26',icon:'🏜️',name:'沙漠骆驼',   desc:'让口渴降到 5% 以下',        stat:'_thirstMin',      target:1,   hidden:false},
-    {id:'a27',icon:'🎪',name:'热闹农场',    desc:'同一天内四种动物都来过',    stat:'_allVisitToday',  target:1,   hidden:false},
+    {id:'a1', icon:'🌱',name:'初次喂食',    desc:'第一次喂食',              stat:'feedCount',    target:1,   hidden:false},
+    {id:'a2', icon:'🥕',name:'素食主义者',  desc:'累计喂食 20 次',           stat:'feedCount',    target:20,  hidden:false},
+    {id:'a3', icon:'🚜',name:'农场主',      desc:'累计喂食 60 次',           stat:'feedCount',    target:60,  hidden:false},
+    {id:'a4', icon:'🤝',name:'摸摸达人',    desc:'摸牛 10 次',               stat:'petCount',     target:10,  hidden:false},
+    {id:'a5', icon:'🏃',name:'遛牛健将',    desc:'遛牛 5 次',                stat:'walkCount',    target:5,   hidden:false},
+    {id:'a6', icon:'😴',name:'安眠奖',      desc:'睡觉 3 次',                stat:'sleepCount',   target:3,   hidden:false},
+    {id:'a7', icon:'💧',name:'爱喝水',      desc:'喝水 5 次',                stat:'drinkCount',   target:5,   hidden:false},
+    {id:'a8', icon:'🐦',name:'交新朋友',    desc:'小鸟来访一次',             stat:'birdCount',    target:1,   hidden:false},
+    {id:'a9', icon:'🌧️',name:'雨中漫步',   desc:'经历一次下雨',             stat:'rainCount',    target:1,   hidden:false},
+    {id:'a10',icon:'🎮',name:'游戏达人',    desc:'迷你游戏接住 15 个',       stat:'gameMaxScore', target:15,  hidden:false},
+    {id:'a11',icon:'🍎',name:'水果狂热者',  desc:'喂喜爱食物 20 次',         stat:'fruitFed',     target:20,  hidden:false},
+    {id:'a12',icon:'👑',name:'牛王驾到',    desc:'达到最高等级',             stat:'oxLevel',      target:5,   hidden:false},
+    {id:'a13',icon:'🐾',name:'动物朋友',    desc:'累计访客 5 次',            stat:'visitorTotal', target:5,   hidden:false},
+    {id:'a14',icon:'🎪',name:'人气王',      desc:'猫咪兔子蝴蝶都来过',       stat:'visitorKind',  target:3,   hidden:false},
+    {id:'a16',icon:'🌃',name:'霓虹漫步',    desc:'进入赛博朋克宇宙',         stat:'_cyber',       target:1,   hidden:false},
+    {id:'a17',icon:'🌊',name:'深海漫游',    desc:'进入水下宇宙',             stat:'_ocean',       target:1,   hidden:false},
+    {id:'a18',icon:'🚀',name:'星际旅行者',  desc:'进入太空宇宙',             stat:'_space',       target:1,   hidden:false},
+    {id:'a19',icon:'🏯',name:'时光旅人',    desc:'进入古代农村宇宙',         stat:'_ancient',     target:1,   hidden:false},
+    {id:'a20',icon:'🌀',name:'宇宙探险家',  desc:'访问全部 4 个平行宇宙',    stat:'universeCount',target:4,   hidden:false},
+    {id:'a21',icon:'🥗',name:'纯素主义',    desc:'累计喂纯素食物 50 次',     stat:'veggFed',      target:50,  hidden:false},
+    {id:'a22',icon:'🍱',name:'美食家',      desc:'喂过全部 15 种食物',       stat:'allFoodKind',  target:15,  hidden:false},
+    {id:'a23',icon:'🔭',name:'宇宙初探',    desc:'第一次穿越平行宇宙',       stat:'universeCount',target:1,   hidden:false},
+    {id:'a24',icon:'🏃',name:'停不下来',    desc:'一天内遛牛 10 次',         stat:'dailyWalkCount',target:10, hidden:false},
+    {id:'a25',icon:'🐟',name:'水桶牛',      desc:'单日喝水 3 次',            stat:'drinkToday',   target:3,   hidden:false},
+    {id:'a26',icon:'🏜️',name:'沙漠骆驼',   desc:'让口渴降到 5% 以下',       stat:'_thirstMin',   target:1,   hidden:false},
+    {id:'a27',icon:'🎪',name:'热闹农场',    desc:'同一天内四种动物都来过',   stat:'_allVisitToday',target:1,  hidden:false},
 
     /* ── 隐藏成就 ── */
-    {id:'a15',icon:'🤖',name:'感谢AI',      desc:'主包消耗了许多智能工人和人工智能的Token', stat:'_secret',       target:1,   hidden:true},
-    {id:'a28',icon:'🌶️',name:'重口味王',   desc:'连续喂了 3 次怪东西',       stat:'junkStreak',      target:3,   hidden:true},
-    {id:'a29',icon:'💨',name:'全漏了',      desc:'小游戏一个没接到',          stat:'_gameMissAll',    target:1,   hidden:true},
-    {id:'a30',icon:'🦉',name:'夜猫子',      desc:'凌晨 12 点后打开游戏',      stat:'_nightOwl',       target:1,   hidden:true},
-    {id:'a31',icon:'🌅',name:'早起的牛',    desc:'早上 6 点前打开游戏',       stat:'_earlyBird',      target:1,   hidden:true},
-    {id:'a32',icon:'☀️',name:'正午阳光',   desc:'中午 12 点整打开游戏',      stat:'_noon',           target:1,   hidden:true},
-    {id:'a33',icon:'💤',name:'冬眠模式',    desc:'让牛连续睡满 3 次',         stat:'sleepChain',      target:3,   hidden:true},
-    {id:'a34',icon:'🏆',name:'满分选手',    desc:'小游戏接住 30 个',          stat:'gameMaxScore',    target:30,  hidden:true},
-    {id:'a35',icon:'💔',name:'太受欢迎了',  desc:'小鸟和蝴蝶同时在场',       stat:'_birdAndBfly',    target:1,   hidden:true},
-    {id:'a36',icon:'🌈',name:'色彩收藏家',  desc:'在 3 个不同宇宙里喂过食物', stat:'universeFeedCount',target:3,  hidden:true},
-
+    {id:'a15',icon:'🤖',name:'感谢AI',      desc:'主包消耗了许多智能工人和人工智能的Token', stat:'_secret',  target:1, hidden:true},
+    {id:'a28',icon:'🌶️',name:'重口味王',   desc:'连续喂了 3 次怪东西',      stat:'junkStreak',   target:3,   hidden:true},
+    {id:'a29',icon:'💨',name:'全漏了',      desc:'小游戏一个没接到',         stat:'_gameMissAll', target:1,   hidden:true},
+    {id:'a30',icon:'🦉',name:'夜猫子',      desc:'凌晨 12 点后打开游戏',     stat:'_nightOwl',    target:1,   hidden:true},
+    {id:'a31',icon:'🌅',name:'早起的牛',    desc:'早上 6 点前打开游戏',      stat:'_earlyBird',   target:1,   hidden:true},
+    {id:'a32',icon:'☀️',name:'正午阳光',   desc:'中午 12 点整打开游戏',     stat:'_noon',        target:1,   hidden:true},
+    {id:'a33',icon:'💤',name:'冬眠模式',    desc:'让牛连续睡满 3 次',        stat:'sleepChain',   target:3,   hidden:true},
+    {id:'a34',icon:'🏆',name:'满分选手',    desc:'小游戏接住 30 个',         stat:'gameMaxScore', target:30,  hidden:true},
+    {id:'a35',icon:'💔',name:'太受欢迎了',  desc:'小鸟和蝴蝶同时在场',      stat:'_birdAndBfly', target:1,   hidden:true},
+    {id:'a36',icon:'🌈',name:'色彩收藏家',  desc:'在 3 个不同宇宙里喂过食物',stat:'universeFeedCount',target:3,hidden:true},
     /* ── 钓鱼成就 ── */
-    {id:'a37',icon:'🎣',name:'第一竿',      desc:'第一次钓鱼',                stat:'fishCaught',      target:1,   hidden:false},
-    {id:'a38',icon:'🐠',name:'垂钓爱好者',  desc:'累计钓到 10 条鱼',          stat:'fishCaught',      target:10,  hidden:false},
-    {id:'a39',icon:'💎',name:'锦鲤附体',    desc:'钓到宝石！',                stat:'_gemCaught',      target:1,   hidden:true},
-    {id:'a40',icon:'🥾',name:'破靴专家',    desc:'钓到破靴子',                stat:'bootCaught',      target:1,   hidden:true},
-
+    {id:'a37',icon:'🎣',name:'第一竿',      desc:'第一次钓鱼',               stat:'fishCaught',    target:1,   hidden:false},
+    {id:'a38',icon:'🐠',name:'垂钓爱好者',  desc:'累计钓到 10 条鱼',          stat:'fishCaught',    target:10,  hidden:false},
+    {id:'a39',icon:'💎',name:'锦鲤附体',    desc:'钓到宝石！',               stat:'_gemCaught',    target:1,   hidden:true},
+    {id:'a40',icon:'🥾',name:'破靴专家',    desc:'钓到破靴子',               stat:'bootCaught',    target:1,   hidden:true},
     /* ── 无聊成就 ── */
-    {id:'a41',icon:'😪',name:'无所事事',    desc:'小牛因为无聊自娱自乐 3 次', stat:'boredCount',      target:3,   hidden:false},
-    {id:'a42',icon:'🌀',name:'追尾巴高手',  desc:'追尾巴 3 次',               stat:'spinCount',       target:3,   hidden:true},
-    {id:'a43',icon:'🪨',name:'消遣石头',    desc:'踢石头 3 次',               stat:'kickCount',       target:3,   hidden:true},
-
+    {id:'a41',icon:'😪',name:'无所事事',    desc:'小牛因为无聊自娱自乐 3 次', stat:'boredCount',    target:3,   hidden:false},
+    {id:'a42',icon:'🌀',name:'追尾巴高手',  desc:'追尾巴 3 次',              stat:'spinCount',     target:3,   hidden:true},
+    {id:'a43',icon:'🪨',name:'消遣石头',    desc:'踢石头 3 次',              stat:'kickCount',     target:3,   hidden:true},
     /* ── 钓鱼场景成就 ── */
-    {id:'a44',icon:'🏞️',name:'湖边初探',   desc:'第一次进入钓鱼场景',         stat:'fishSceneVisit',  target:1,   hidden:false},
-    {id:'a45',icon:'🎣',name:'钓鱼达人',    desc:'累计钓到 20 条',             stat:'fishCaught',      target:20,  hidden:false},
-    {id:'a46',icon:'🌊',name:'享受宁静',    desc:'在湖边待超过 60 秒',         stat:'fishSceneSec',    target:60,  hidden:false},
-    {id:'a47',icon:'🐡',name:'河豚猎手',    desc:'钓到河豚',                   stat:'_pufferCaught',   target:1,   hidden:true},
-    {id:'a48',icon:'🦑',name:'深海传说',    desc:'钓到鱿鱼',                   stat:'_squidCaught',    target:1,   hidden:true},
-
-    /* ── 新增扩展成就 ── */
-    {id:'a49',icon:'🌍',name:'宇宙背包客',  desc:'在全部 5 个宇宙里各钓过一条鱼', stat:'_fishAllUniverse', target:1,  hidden:true},
-    {id:'a50',icon:'💧',name:'水分充足',    desc:'下雨时恢复口渴到满',             stat:'_rainFull',        target:1,  hidden:true},
-    {id:'a51',icon:'🏅',name:'初登榜单',    desc:'第一次上传排行榜数据',            stat:'lbUploaded',       target:1,  hidden:false},
-    {id:'a52',icon:'👑',name:'真正的王',    desc:'???',                            stat:'_trueKing',       target:1,  hidden:true},
-    {id:'a53',icon:'⚒️',name:'打工新牛',    desc:'完成 1 次打工小游戏',            stat:'workCount',        target:1,  hidden:false},
-    {id:'a54',icon:'💼',name:'勤劳致富',    desc:'累计完成 10 次打工小游戏',       stat:'workCount',        target:10, hidden:false},
-    {id:'a55',icon:'🌾',name:'耕地狂魔',    desc:'累计完成 30 次打工小游戏',       stat:'workCount',        target:30, hidden:true},
-    {id:'a56',icon:'🐸',name:'呱呱之友',    desc:'青蛙来访 1 次',                stat:'frogCount',        target:1,  hidden:false},
-    {id:'a57',icon:'🏕️',name:'池塘朋友圈',  desc:'青蛙累计来访 5 次',             stat:'frogCount',        target:5,  hidden:true},
-    {id:'a58',icon:'⭐',name:'高级牛马',    desc:'达到 Lv.8',                   stat:'oxLevel',         target:8,  hidden:false},
-    {id:'a59',icon:'🌟',name:'传说降临',    desc:'达到 Lv.10',                  stat:'oxLevel',         target:10, hidden:true},
-    {id:'a60',icon:'🪝',name:'熟练钓手',    desc:'累计钓到 50 条鱼',             stat:'fishCaught',      target:50, hidden:false},
-    {id:'a61',icon:'🐋',name:'湖边常驻民',  desc:'在湖边停留 300 秒',            stat:'fishSceneSec',    target:300,hidden:true},
-    {id:'a62',icon:'🎉',name:'热闹的一天',  desc:'累计迎接 15 次访客',            stat:'visitorTotal',    target:15, hidden:false},
-    {id:'a63',icon:'🚰',name:'吨吨吨',      desc:'累计喝水 20 次',               stat:'drinkCount',      target:20, hidden:false},
-    {id:'a64',icon:'🥵',name:'差点渴坏了',  desc:'口渴值低于 1%',               stat:'_thirstCritical', target:1,  hidden:true},
-    {id:'a65',icon:'🍽️',name:'饱餐一顿',   desc:'饥饿值恢复到 100%',            stat:'_hungerFull',     target:1,  hidden:true},
-    {id:'a66',icon:'🏅',name:'榜上有名',    desc:'上传排行榜 3 次',              stat:'lbUploadedCount', target:3,  hidden:true},
-    {id:'a67',icon:'🔮',name:'收藏家',      desc:'解锁 20 个成就',              stat:'_achUnlockedCount',target:20, hidden:false},
-    {id:'a68',icon:'👁️',name:'全都要',     desc:'解锁 35 个成就',              stat:'_achUnlockedCount',target:35, hidden:true},
-    {id:'a69',icon:'🏆',name:'牛之终点',    desc:'解锁 50 个成就',              stat:'_achUnlockedCount',target:50, hidden:true},
-    {id:'a70',icon:'🎊',name:'今日全勤',    desc:'同一天内猫咪、兔子、蝴蝶、青蛙都来过', stat:'_allVisitTodayPlus', target:1, hidden:true}
+    {id:'a44',icon:'🏞️',name:'湖边初探',   desc:'第一次进入钓鱼场景',        stat:'fishSceneVisit',target:1,   hidden:false},
+    {id:'a45',icon:'🎣',name:'钓鱼达人',    desc:'累计钓到 20 条',            stat:'fishCaught',    target:20,  hidden:false},
+    {id:'a46',icon:'🌊',name:'享受宁静',    desc:'在湖边待超过 60 秒',        stat:'fishSceneSec',  target:60,  hidden:false},
+    {id:'a47',icon:'🐡',name:'河豚猎手',    desc:'钓到河豚',                  stat:'_pufferCaught', target:1,   hidden:true},
+    {id:'a48',icon:'🦑',name:'深海传说',    desc:'钓到鱿鱼',                  stat:'_squidCaught',  target:1,   hidden:true},
+    /* [EXTEND_ACHS] ← 新成就数据粘贴到这行上面 */
+    // 新功能成就
+    {id:'a49',icon:'🌍',name:'宇宙背包客',  desc:'在全部5个宇宙里各钓过一条鱼',  stat:'_fishAllUniverse',target:1,  hidden:true},
+    {id:'a50',icon:'💧',name:'水分充足',    desc:'下雨时恢复口渴到满',            stat:'_rainFull',       target:1,  hidden:true},
+    {id:'a51',icon:'🏅',name:'初登榜单',    desc:'第一次上传排行榜数据',           stat:'lbUploaded',      target:1,  hidden:false},
+    {id:'a52',icon:'👑',name:'真正的王',    desc:'???',                           stat:'_trueKing',       target:1,  hidden:true},
 ];
 var unlockedAchs=[];
 function getStatVal(stat){
     if(stat==='feedCount')return feedCount;
     if(stat==='oxLevel')return oxLevel;
-    if(stat==='visitorKind')return (ST.catCount>0?1:0)+(ST.rabbitCount>0?1:0)+(ST.butterflyCount>0?1:0)+((ST.frogCount||0)>0?1:0);
+    if(stat==='visitorKind')return (ST.catCount>0?1:0)+(ST.rabbitCount>0?1:0)+(ST.butterflyCount>0?1:0);
     if(stat==='allFoodKind')return Object.keys(ST.allFoodSeen).length;
     if(stat==='universeFeedCount')return Object.keys(ST.universeFeeds).length;
     if(stat==='_secret')return ST._secret||0;
@@ -1042,10 +1024,7 @@ function getStatVal(stat){
     if(stat==='_ancient')return ST.universeVisited.ancient?1:0;
     if(stat==='universeCount')return ST.universeCount;
     if(stat==='_thirstMin')return (thirst<=5)?1:0;
-    if(stat==='_thirstCritical')return (thirst<=1)?1:0;
-    if(stat==='_hungerFull')return (hunger>=100)?1:0;
     if(stat==='_allVisitToday')return (ST.todayBird&&ST.todayCat&&ST.todayRabbit&&ST.todayBfly)?1:0;
-    if(stat==='_allVisitTodayPlus')return (ST.todayCat&&ST.todayRabbit&&ST.todayBfly&&((ST.frogCountToday||0)>0))?1:0;
     if(stat==='_gameMissAll')return ST.gameMissAll?1:0;
     if(stat==='_nightOwl')return (ST.openHour>=0&&ST.openHour<6)?1:0;
     if(stat==='_earlyBird')return (ST.openHour>=4&&ST.openHour<6)?1:0;
@@ -1065,28 +1044,22 @@ function getStatVal(stat){
     if(stat==='_rainFull')return ST._rainFull||0;
     if(stat==='_fishAllUniverse')return (ST._fishUniverse&&Object.keys(ST._fishUniverse).length>=5)?1:0;
     if(stat==='lbUploaded')return ST.lbUploaded||0;
-    if(stat==='lbUploadedCount')return ST.lbUploadedCount||0;
-    if(stat==='_achUnlockedCount')return unlockedAchs.length;
     return ST[stat]||0;
 }
 function checkAchievements(){
-    var changed = false;
     ACHS.forEach(function(a){
         if(unlockedAchs.indexOf(a.id)>=0)return;
         if(getStatVal(a.stat)>=a.target){
             unlockedAchs.push(a.id);
-            changed = true;
             document.getElementById('achPopupIcon').textContent=a.icon;
             document.getElementById('achPopupName').textContent=a.name;
             achPopup.classList.add('show');
             setTimeout(function(){achPopup.classList.remove('show');},4000);
+            // 检查是否有成就型装备刚好满足
             checkSkinUnlock();
         }
     });
-    if(changed){
-        renderAchPanel();
-        scheduleSave();
-    }
+    renderAchPanel();
 }
 function renderAchPanel(){
     achList.innerHTML='';
@@ -2491,7 +2464,7 @@ function updateFrog(){
             FROG.state='sitting';
             bubble('哞！一只青蛙！呱呱呱~ 🐸',2200);
             mood=Math.min(5,mood+1);setMood();
-            ST.frogCount=(ST.frogCount||0)+1;ST.frogCountToday=(ST.frogCountToday||0)+1;ST.visitorTotal++;checkAchievements();
+            ST.frogCount=(ST.frogCount||0)+1;ST.visitorTotal++;checkAchievements();
             FROG.sitT=setTimeout(function(){
                 bubble('青蛙跳走啦~',1800);
                 setTimeout(function(){FROG.state='hopping-out';FROG.dir=-FROG.dir;},1800);
@@ -3748,36 +3721,32 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '10.1.1';
+var CURRENT_VER = '10.1.2';
 
 // 版本更新弹窗内容（老用户首次打开时显示）
 var VER_POPUP = {
-    emoji: '🎉',
-    title: '排行榜体验升级',
-    okBtn: '我知道了 🐄',
+    emoji:   '⚡',
+    title:   '修复了一些BUG和体验问题',
+    okBtn:   '我知道了🐄',
     warning: '',
     items: [
-        '🏆 打工玩法升级：支持在同一页面查看「闪电耕作」与「丰收竞赛」',
-        '⚡ 双榜同屏展示，排名对比更直观',
-        '🎨 排行榜界面优化，更有游戏感（不再是传统表格）',
-        '🐞 修复部分排行榜显示异常问题',
-        '⚡ 优化整体加载与展示性能，让体验更流畅',
-        '💡 有新点子或发现BUG？欢迎通过反馈入口告诉我们！',
+        '地块打勾无法对齐的BUG已修复',
+        '增加耕地模式切换开关',
+        '优化了移动端的显示体验',
     ]
 };
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
-    {
-        ver: 'v10.1.1', title: '打工小游戏上线了',
+{
+        ver: 'v10.1.2', title: '排行榜耕地专区 + 打工游戏升级',
         items: [
-        '🏆 新增「🌾 耕地排行榜」（合并展示）',
-        '⚡ 支持「闪电耕作」与「丰收竞赛」双榜同屏查看',
-        '🥇🥈🥉 排行前三名增加高亮效果',
-        '📊 排行展示优化，信息更清晰、游戏感更强',
-        '✨ 视觉风格统一，整体体验更顺滑',
-        '🐞 修复部分情况下排行榜显示异常',
-        '⚡ 优化加载性能，减少卡顿问题',
+            '🌾⚡ 排行榜新增耕地专区，双列展示丰收竞赛（高分）和闪电耕作（最速）',
+            '🥇 排行第一名有金色呼吸发光特效',
+            '🎮 打工游戏连击新增倒计时圆圈（1秒断连，点错立即清零）',
+            '🌾 丰收竞赛：30秒无限耕田冲高分',
+            '⚡ 闪电耕作：耕完25块田最短时间上榜',
+            '🔗 游戏结束自动上传排行榜（有昵称才传）',
         ]
     },
     {
@@ -4345,9 +4314,9 @@ function renderFarmList(rows, elId, isTime){
         div.className = 'lb-item ' + rankClass + (isMe?' lb-me':'');
         if(isMe) div.style.cssText += 'outline:2px solid #1976d2';
         div.innerHTML =
-            '<div style="display:flex;align-items:center;gap:4px;overflow:hidden">' +
-                '<span>' + avatar + '</span>' +
-                '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' +
+            '<div style="display:flex;align-items:center;gap:4px;overflow:hidden;max-width:calc(100% - 52px)">' +
+                '<span style="flex-shrink:0">' + avatar + '</span>' +
+                '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px">' +
                     (i+1) + '. ' + s.name + (isMe?' 👈':'') +
                 '</span>' +
                 (i===0 ? '<span>👑</span>' : '') +
@@ -4372,6 +4341,25 @@ function loadFarmDual(){
         document.getElementById('farmAList').innerHTML = '<div style="color:#e53935;text-align:center;font-size:12px">加载失败</div>';
     });
 }
+
+// 标题点击切换高亮
+(function(){
+    var focused = 'B'; // 默认高亮闪电
+    function updateFarmTitles(){
+        var tA = document.getElementById('farmTitleA');
+        var tB = document.getElementById('farmTitleB');
+        if(!tA||!tB) return;
+        tA.style.background = focused==='A'?'#fff8e1':'';
+        tA.style.color = focused==='A'?'#f9a825':'#aaa';
+        tB.style.background = focused==='B'?'#e3f2fd':'';
+        tB.style.color = focused==='B'?'#1976d2':'#aaa';
+    }
+    document.addEventListener('click', function(e){
+        if(e.target.id==='farmTitleB'){focused='B';updateFarmTitles();}
+        else if(e.target.id==='farmTitleA'){focused='A';updateFarmTitles();}
+    });
+    updateFarmTitles();
+})();
 
 document.getElementById('lbBtn').addEventListener('click', function(){
     document.getElementById('lbOverlay').classList.add('open');
@@ -4481,10 +4469,7 @@ function uploadMyScores(){
     ];
     Promise.all(uploads.map(function(u){ return sbUpsert(name, u.cat, u.value, u.extra); }))
         .then(function(){
-            ST.lbUploaded=1;
-            ST.lbUploadedCount=(ST.lbUploadedCount||0)+1;
-            checkAchievements();
-            scheduleSave();
+            ST.lbUploaded=1; checkAchievements();
             bubble('🏅 已上榜！去看看排名吧', 2500); loadLeaderboard();
         })
         .catch(function(){ bubble('上传失败，请检查网络', 2000); });
@@ -4591,6 +4576,18 @@ document.getElementById('appearanceSel').addEventListener('change',function(){
         bubble(window.fxDisabled?'特效已关闭':'特效已开启 ✨',1500);
     });
 })();
+
+
+/* ═══ 右上角信息菜单 ═══ */
+document.getElementById('infoMenuBtn').addEventListener('click', function(e){
+    e.stopPropagation();
+    var p = document.getElementById('infoMenuPanel');
+    p.style.display = p.style.display==='none'?'block':'none';
+});
+document.addEventListener('click', function(){
+    document.getElementById('infoMenuPanel').style.display='none';
+});
+document.getElementById('infoMenuPanel').addEventListener('click', function(e){ e.stopPropagation(); });
 
 /* ═══ 菜单弹出 ═══ */
 var fanOpen = false;
