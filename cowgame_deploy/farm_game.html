@@ -738,7 +738,6 @@
         <div class="panel">
           <h3>操作按钮</h3>
           <div class="actions">
-            <button class="primary" id="autoBtn">自动耕 1 块</button>
             <button class="secondary" id="resetBtn">重新开始</button>
           </div>
         </div>
@@ -772,7 +771,6 @@
     const feedback = document.getElementById('feedback');
     const cow = document.getElementById('cow');
     const progressFill = document.getElementById('progressFill');
-    const autoBtn = document.getElementById('autoBtn');
     const resetBtn = document.getElementById('resetBtn');
     const winOverlay = document.getElementById('winOverlay');
     const finalScore = document.getElementById('finalScore');
@@ -1113,7 +1111,6 @@
     }
 
     // ── 事件绑定 ──
-    autoBtn.addEventListener('click', autoPlowOne);
     resetBtn.addEventListener('click', resetGame);
     restartBtn.addEventListener('click', resetGame);
     document.getElementById('modeA').addEventListener('click', () => setMode('A'));
