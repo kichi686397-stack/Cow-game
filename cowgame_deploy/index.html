@@ -3714,23 +3714,31 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '10.1.2';
+var CURRENT_VER = '10.1.3';
 
 // 版本更新弹窗内容（老用户首次打开时显示）
 var VER_POPUP = {
-    emoji:   '⚡',
-    title:   '修复了一些BUG和体验问题',
+    emoji:   '🏅',
+    title:   '修复了耕地排行榜上传异常',
     okBtn:   '我知道了🐄',
     warning: '',
     items: [
-        '地块打勾无法对齐的BUG已修复',
-        '增加耕地模式切换开关',
-        '优化了移动端的显示体验',
+        '耕地排行榜改为只在点击上传后才上榜',
+        '修复闪电耕作 0.0s 被当成有效成绩保存的问题',
+        '耕地上传时会自动跳过无效成绩和空记录',
     ]
 };
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
+{
+        ver: 'v10.1.3', title: '耕地上传修复',
+        items: [
+            '🏅 耕地成绩改为只在点击上传按钮后才会上传',
+            '⚡ 修复闪电耕作 0.0s 被记录到排行榜的问题',
+            '🛡️ 上传时自动跳过无效耕地成绩，避免空记录上榜',
+        ]
+    },
 {
         ver: 'v10.1.2', title: '排行榜耕地专区 + 打工游戏升级',
         items: [
@@ -4484,14 +4492,21 @@ function uploadMyScores(){
         {cat:'level', value:feedCount,            extra:'Lv.'+oxLevel+' '+lvName},
         {cat:'ach',   value:unlockedAchs.length,  extra:unlockedAchs.length+'/'+ACHS.length+'个'},
         {cat:'fruit', value:ST.gameMaxScore||0,   extra:uniLabel},
-        {cat:'fish',  value:ST.fishCaught||0,     extra:uniLabel},
-        {cat:'farm_a',value:ST.farmBestA||0,      extra:uniLabel},
-        {cat:'farm_b',value:ST.farmBestB||0,      extra:uniLabel}
+        {cat:'fish',  value:ST.fishCaught||0,     extra:uniLabel}
     ];
+    if((ST.farmBestA||0) > 0){
+        uploads.push({cat:'farm_a', value:ST.farmBestA, extra:uniLabel});
+    }
+    if((ST.farmBestB||0) > 0){
+        uploads.push({cat:'farm_b', value:ST.farmBestB, extra:uniLabel});
+    }
     Promise.all(uploads.map(function(u){ return sbUpsert(name, u.cat, u.value, u.extra); }))
         .then(function(){
             ST.lbUploaded=1; checkAchievements();
-            bubble('🏅 已上榜！去看看排名吧', 2500);
+            var farmTips = [];
+            if((ST.farmBestA||0) > 0) farmTips.push('🌾丰收竞赛');
+            if((ST.farmBestB||0) > 0) farmTips.push('⚡闪电耕作');
+            bubble(farmTips.length ? ('🏅 已上传：'+farmTips.join(' / ')) : '🏅 已上榜！去看看排名吧', 2500);
             if(lbCurrentCat === 'farm') loadFarmDual();
             else loadLeaderboard();
         })
@@ -4538,8 +4553,11 @@ window.addEventListener('message', function(e){
         if(mode === 'A'){
             ST.farmBestA = Math.max(ST.farmBestA||0, score||0);
         } else if(mode === 'B' && timeVal !== null){
-            var timeScore = Math.round(parseFloat(timeVal) * 10); // 存整数（0.1秒精度）
-            if(!ST.farmBestB || timeScore < ST.farmBestB) ST.farmBestB = timeScore;
+            var parsedTime = parseFloat(timeVal);
+            var timeScore = Math.round(parsedTime * 10); // 存整数（0.1秒精度）
+            if(isFinite(parsedTime) && timeScore > 0){
+                if(!ST.farmBestB || timeScore < ST.farmBestB) ST.farmBestB = timeScore;
+            }
         }
         checkAchievements();
         scheduleSave();

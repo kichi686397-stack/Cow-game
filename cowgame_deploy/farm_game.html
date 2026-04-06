@@ -313,6 +313,7 @@
     let currentMode = 'A'; // A=丰收竞赛 B=闪电耕作
     let tiles = [], score = 0, combo = 0, maxCombo = 0;
     let timerSec = 30, timerIv = null, gameRunning = false;
+    let modeBStartAt = 0;
     let lastHitTime = 0, comboRingAnim = null;
 
     // ── 音效 ──
@@ -459,12 +460,16 @@
         },1000);
       } else {
         timerSec=0; timerText.textContent='0.0s';
-        const start=Date.now();
-        timerIv=setInterval(()=>{ timerSec=((Date.now()-start)/1000).toFixed(1); timerText.textContent=timerSec+'s'; },100);
+        modeBStartAt=Date.now();
+        timerIv=setInterval(()=>{ timerSec=((Date.now()-modeBStartAt)/1000).toFixed(1); timerText.textContent=timerSec+'s'; },100);
       }
     }
     function endGame() {
       gameRunning=false; clearInterval(timerIv); timerText.style.color='';
+      if (currentMode==='B' && modeBStartAt) {
+        timerSec = Math.max(0.1, Math.round((Date.now()-modeBStartAt)/100)/10).toFixed(1);
+        timerText.textContent=timerSec+'s';
+      }
       finalScore.textContent=score; finalCombo.textContent=maxCombo;
       document.getElementById('finalTime').textContent=currentMode==='B'?timerSec+'s':'30s';
       document.getElementById('winTitle').textContent=themeFeedback[currentTheme].win;
@@ -505,7 +510,7 @@
     }
     function resetGame() {
       clearInterval(timerIv); gameRunning=false;
-      score=0; combo=0; maxCombo=0; lastHitTime=0;
+      score=0; combo=0; maxCombo=0; lastHitTime=0; modeBStartAt=0;
       timerSec=currentMode==='A'?30:0;
       timerText.textContent=currentMode==='A'?'30':'0.0s';
       timerText.style.color='';
