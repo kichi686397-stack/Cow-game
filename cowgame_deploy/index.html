@@ -540,20 +540,12 @@
     <div id="lbFarmGrid" style="display:none">
       <!-- 标题行可点击切换高亮 -->
       <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:10px;font-size:14px;font-weight:bold">
-        <span id="farmTitleB" style="cursor:pointer;padding:4px 10px;border-radius:10px;transition:all .2s;background:#e3f2fd;color:#1976d2">⚡ 闪电耕作</span>
+        <span id="farmTitleB" class="farm-tab active">⚡ 闪电耕作</span>
         <span style="color:#ccc">/</span>
-        <span id="farmTitleA" style="cursor:pointer;padding:4px 10px;border-radius:10px;transition:all .2s;color:#aaa">🌾 丰收竞赛</span>
+        <span id="farmTitleA" class="farm-tab">🌾 丰收竞赛</span>
       </div>
-      <div class="farm-grid">
-        <div class="farm-col">
-          <div style="font-size:10px;text-align:center;color:#aaa;margin-bottom:6px">时间越短越好</div>
-          <div id="farmBList"></div>
-        </div>
-        <div class="farm-col">
-          <div style="font-size:10px;text-align:center;color:#aaa;margin-bottom:6px">分数越高越好</div>
-          <div id="farmAList"></div>
-        </div>
-      </div>
+      <div style="font-size:11px;text-align:center;color:#aaa;margin-bottom:6px" id="farmDesc"></div>
+        <div id="farmSingleList"></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
       <button id="lbRefreshBtn" style="flex:1;padding:8px;border-radius:10px;background:#f5f5f5;border:1.5px solid #ddd;cursor:pointer;font-size:13px">🔄 刷新</button>
@@ -4296,12 +4288,15 @@ function getAvatar(name){
     return emojis[(name.charCodeAt(0)||0) % emojis.length];
 }
 
+var farmFocused = 'B';
+var farmRowsCache = {A:[], B:[]};
+
 function renderFarmList(rows, elId, isTime){
     var el = document.getElementById(elId);
     if(!el) return;
     var myName = localStorage.getItem('pixelcow_lbname')||'';
     if(!rows || !rows.length){
-        el.innerHTML = '<div style="text-align:center;padding:16px;color:#aaa;font-size:12px">暂无记录</div>';
+        el.innerHTML = '<div style="text-align:center;padding:18px;color:#aaa;font-size:12px">暂无记录</div>';
         return;
     }
     el.innerHTML = '';
@@ -4314,52 +4309,70 @@ function renderFarmList(rows, elId, isTime){
         div.className = 'lb-item ' + rankClass + (isMe?' lb-me':'');
         if(isMe) div.style.cssText += 'outline:2px solid #1976d2';
         div.innerHTML =
-            '<div style="display:flex;align-items:center;gap:4px;overflow:hidden;max-width:calc(100% - 52px)">' +
+            '<div style="display:flex;align-items:center;gap:6px;overflow:hidden;flex:1;min-width:0">' +
                 '<span style="flex-shrink:0">' + avatar + '</span>' +
-                '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:80px">' +
-                    (i+1) + '. ' + s.name + (isMe?' 👈':'') +
+                '<span style="flex-shrink:0;color:#888;font-weight:bold;width:22px">' + (i+1) + '.</span>' +
+                '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1">' +
+                    s.name + (isMe?' 👈':'') +
                 '</span>' +
-                (i===0 ? '<span>👑</span>' : '') +
+                (i===0 ? '<span style="flex-shrink:0">👑</span>' : '') +
             '</div>' +
-            '<span style="flex-shrink:0;font-weight:bold;color:'+(i===0?'#f9a825':i===1?'#78909c':'#1976d2')+'">' + displayVal + '</span>';
+            '<span style="flex-shrink:0;font-weight:bold;color:'+(i===0?'#f9a825':i===1?'#78909c':'#1976d2')+';margin-left:8px">' + displayVal + '</span>';
         el.appendChild(div);
     });
 }
 
+function updateFarmTitles(){
+    var tA = document.getElementById('farmTitleA');
+    var tB = document.getElementById('farmTitleB');
+    var desc = document.getElementById('farmDesc');
+    if(!tA||!tB||!desc) return;
+    var isA = farmFocused==='A';
+    tA.style.background = isA ? '#fff8e1' : '';
+    tA.style.color = isA ? '#f9a825' : '#aaa';
+    tA.style.padding = '4px 10px';
+    tA.style.borderRadius = '999px';
+    tA.style.cursor = 'pointer';
+    tB.style.background = !isA ? '#e3f2fd' : '';
+    tB.style.color = !isA ? '#1976d2' : '#aaa';
+    tB.style.padding = '4px 10px';
+    tB.style.borderRadius = '999px';
+    tB.style.cursor = 'pointer';
+    desc.textContent = isA ? '🌾 丰收竞赛：按30秒内最高分排行' : '⚡ 闪电耕作：按耕完25块田最短时间排行';
+}
+
+function renderFocusedFarm(){
+    updateFarmTitles();
+    renderFarmList(farmRowsCache[farmFocused] || [], 'farmSingleList', farmFocused==='B');
+}
+
 function loadFarmDual(){
-    document.getElementById('farmBList').innerHTML = '<div style="text-align:center;padding:16px;color:#aaa;font-size:12px">加载中...</div>';
-    document.getElementById('farmAList').innerHTML = '<div style="text-align:center;padding:16px;color:#aaa;font-size:12px">加载中...</div>';
+    var list = document.getElementById('farmSingleList');
+    if(list) list.innerHTML = '<div style="text-align:center;padding:18px;color:#aaa;font-size:12px">加载中...</div>';
+    updateFarmTitles();
     var base = SB_URL+'/rest/v1/leaderboard?select=name,value,extra&limit=8';
     Promise.all([
         fetch(base+'&cat=eq.farm_b&order=value.asc', {headers:SB_HEADERS}).then(function(r){return r.json();}),
         fetch(base+'&cat=eq.farm_a&order=value.desc', {headers:SB_HEADERS}).then(function(r){return r.json();})
     ]).then(function(results){
-        renderFarmList(results[0], 'farmBList', true);  // 闪电：时间
-        renderFarmList(results[1], 'farmAList', false); // 丰收：分数
+        farmRowsCache.B = results[0] || [];
+        farmRowsCache.A = results[1] || [];
+        renderFocusedFarm();
     }).catch(function(){
-        document.getElementById('farmBList').innerHTML = '<div style="color:#e53935;text-align:center;font-size:12px">加载失败</div>';
-        document.getElementById('farmAList').innerHTML = '<div style="color:#e53935;text-align:center;font-size:12px">加载失败</div>';
+        if(list) list.innerHTML = '<div style="color:#e53935;text-align:center;font-size:12px;padding:18px">加载失败</div>';
     });
 }
 
-// 标题点击切换高亮
-(function(){
-    var focused = 'B'; // 默认高亮闪电
-    function updateFarmTitles(){
-        var tA = document.getElementById('farmTitleA');
-        var tB = document.getElementById('farmTitleB');
-        if(!tA||!tB) return;
-        tA.style.background = focused==='A'?'#fff8e1':'';
-        tA.style.color = focused==='A'?'#f9a825':'#aaa';
-        tB.style.background = focused==='B'?'#e3f2fd':'';
-        tB.style.color = focused==='B'?'#1976d2':'#aaa';
+document.addEventListener('click', function(e){
+    if(e.target.id==='farmTitleB'){
+        farmFocused='B';
+        renderFocusedFarm();
+    }else if(e.target.id==='farmTitleA'){
+        farmFocused='A';
+        renderFocusedFarm();
     }
-    document.addEventListener('click', function(e){
-        if(e.target.id==='farmTitleB'){focused='B';updateFarmTitles();}
-        else if(e.target.id==='farmTitleA'){focused='A';updateFarmTitles();}
-    });
-    updateFarmTitles();
-})();
+});
+updateFarmTitles();
 
 document.getElementById('lbBtn').addEventListener('click', function(){
     document.getElementById('lbOverlay').classList.add('open');
