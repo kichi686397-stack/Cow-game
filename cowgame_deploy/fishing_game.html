@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小牛钓鱼</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg1: #dff6ff;
+      --bg2: #b8e3ff;
+      --panel: rgba(255,255,255,0.78);
+      --border: #8ac7f0;
+      --text: #214761;
+      --accent: #4aa8e8;
+      --accent2: #2f7fca;
+      --good: #4caf50;
+      --warn: #ffb300;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      font-family: "Microsoft YaHei", system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 15%, rgba(255,255,255,0.65), transparent 18%),
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,0.5), transparent 16%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+    }
+    .shell {
+      width: min(960px, 100%);
+      background: var(--panel);
+      border: 3px solid var(--border);
+      border-radius: 28px;
+      box-shadow: 0 18px 45px rgba(32, 92, 135, 0.15);
+      backdrop-filter: blur(8px);
+      padding: 18px;
+    }
+    .topbar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat {
+      background: rgba(255,255,255,0.72);
+      border: 2px solid #9dd2f5;
+      border-radius: 18px;
+      padding: 12px;
+      text-align: center;
+    }
+    .label {
+      font-size: 12px;
+      opacity: 0.72;
+      margin-bottom: 6px;
+    }
+    .value {
+      font-size: 24px;
+      font-weight: 800;
+    }
+    .main {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+    }
+    .pond-wrap {
+      position: relative;
+      min-height: 540px;
+      border-radius: 28px;
+      border: 3px solid #7dc0ef;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, #9edfff 0%, #78cef8 18%, #59b9ee 19%, #2f9fe0 100%);
+    }
+    .sky-deco {
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 110px;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 15% 30%, rgba(255,255,255,0.9) 0 22px, transparent 23px),
+        radial-gradient(circle at 21% 28%, rgba(255,255,255,0.9) 0 18px, transparent 19px),
+        radial-gradient(circle at 75% 25%, rgba(255,255,255,0.85) 0 20px, transparent 21px),
+        radial-gradient(circle at 81% 24%, rgba(255,255,255,0.85) 0 16px, transparent 17px);
+      opacity: 0.9;
+    }
+    .shore {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 132px;
+      background: linear-gradient(180deg, #92cf6f 0%, #71bb50 100%);
+      border-bottom: 4px solid rgba(58, 130, 48, 0.35);
+      pointer-events: none;
+    }
+    .cow {
+      position: absolute;
+      left: 18px;
+      top: 14px;
+      width: 176px;
+      height: 116px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 76px;
+      filter: drop-shadow(0 8px 10px rgba(0,0,0,0.12));
+      user-select: none;
+      pointer-events: none;
+      z-index: 3;
+    }
+    .rod {
+      position: absolute;
+      left: 124px;
+      top: 56px;
+      width: 138px;
+      height: 6px;
+      background: linear-gradient(90deg, #6d4c41, #9c6b4d);
+      border-radius: 999px;
+      transform-origin: 0 50%;
+      transform: rotate(20deg);
+      z-index: 3;
+      pointer-events: none;
+    }
+    .line {
+      position: absolute;
+      width: 2px;
+      background: rgba(255,255,255,0.9);
+      z-index: 2;
+      pointer-events: none;
+      transform-origin: top center;
+    }
+    .hook {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      z-index: 4;
+      pointer-events: none;
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translate(-50%, -50%);
+      filter: drop-shadow(0 4px 4px rgba(0,0,0,0.18));
+    }
+    .water-area {
+      position: absolute;
+      inset: 132px 0 0 0;
+      overflow: hidden;
+    }
+    .water-area::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(180deg, rgba(255,255,255,0.08) 0 3px, transparent 3px 32px),
+        radial-gradient(circle at 20% 25%, rgba(255,255,255,0.08), transparent 18%),
+        radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06), transparent 18%);
+      animation: drift 7s linear infinite;
+      pointer-events: none;
+    }
+    @keyframes drift {
+      from { transform: translateY(0); }
+      to { transform: translateY(18px); }
+    }
+    .fish {
+      position: absolute;
+      width: 72px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      filter: drop-shadow(0 5px 5px rgba(0,0,0,0.14));
+      user-select: none;
+      transition: transform 0.05s linear;
+    }
+    .fish.gold { font-size: 38px; }
+    .fish.rare { font-size: 40px; }
+    .fish.shadow { filter: brightness(0.55) blur(0.2px); }
+    .bubble {
+      position: absolute;
+      color: rgba(255,255,255,0.7);
+      font-size: 18px;
+      pointer-events: none;
+      animation: bubbleUp 2.4s linear forwards;
+    }
+    @keyframes bubbleUp {
+      from { transform: translateY(0); opacity: 0.2; }
+      20% { opacity: 0.8; }
+      to { transform: translateY(-48px); opacity: 0; }
+    }
+    .float-text {
+      position: absolute;
+      font-weight: 800;
+      color: white;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.28);
+      pointer-events: none;
+      animation: rise 1s ease forwards;
+      z-index: 6;
+    }
+    @keyframes rise {
+      0% { transform: translateY(0) scale(0.9); opacity: 0; }
+      15% { opacity: 1; }
+      100% { transform: translateY(-40px) scale(1.08); opacity: 0; }
+    }
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .panel {
+      background: rgba(255,255,255,0.74);
+      border: 2px solid #9fd4f6;
+      border-radius: 22px;
+      padding: 14px;
+    }
+    .panel h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .feedback {
+      min-height: 24px;
+      font-weight: 700;
+      color: #2c6f9d;
+      text-align: center;
+    }
+    .progress {
+      height: 14px;
+      background: rgba(0,0,0,0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #7edcff, #4aa8e8);
+      transition: width 0.2s ease;
+    }
+    .actions { display: grid; gap: 10px; }
+    button {
+      border: none;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.12s ease, filter 0.15s ease;
+    }
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(1px) scale(0.99); }
+    .primary {
+      background: linear-gradient(180deg, #8bd9ff 0%, #46a7e9 100%);
+      color: #143f59;
+    }
+    .secondary {
+      background: rgba(255,255,255,0.7);
+      border: 2px solid #96cdf1;
+      color: #275572;
+    }
+    .tips {
+      margin: 0;
+      padding-left: 18px;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+    .overlay {
+      position: absolute;
+      inset: 16px;
+      background: rgba(245, 252, 255, 0.92);
+      border: 3px dashed #82c6ef;
+      border-radius: 24px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 20;
+      padding: 24px;
+    }
+    .overlay.show { display: flex; }
+    .overlay-card h2 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+    .overlay-card p {
+      margin: 6px 0;
+      font-size: 16px;
+    }
+
+    /* ── 宇宙主题 ── */
+    body.theme-cyberpunk {
+      --bg1: #0d1117; --bg2: #0a1528;
+      --panel: rgba(10,20,40,0.85); --border: #0ff6;
+      --text: #7df9ff; --accent: #ff00cc; --accent2: #cc00ff;
+    }
+    body.theme-cyberpunk .pond-wrap {
+      background: linear-gradient(180deg,#0a1525 0%,#0d2040 18%,#0a2855 19%,#061530 100%);
+      border-color: #0ff4;
+    }
+    body.theme-cyberpunk .fish { filter: hue-rotate(160deg) brightness(1.3); }
+
+    body.theme-underwater {
+      --bg1: #0e3a5a; --bg2: #082030;
+      --panel: rgba(10,40,70,0.85); --border: #00bcd466;
+      --text: #e0f7ff; --accent: #00e5ff; --accent2: #00b8d4;
+    }
+    body.theme-underwater .pond-wrap {
+      background: linear-gradient(180deg,#0a3a5a 0%,#0a5070 18%,#0a3a8a 19%,#062060 100%);
+      border-color: #00bcd466;
+    }
+
+    body.theme-space {
+      --bg1: #05050f; --bg2: #0a0a20;
+      --panel: rgba(8,8,30,0.88); --border: #3344cc66;
+      --text: #e8e8ff; --accent: #6677ff; --accent2: #3344cc;
+    }
+    body.theme-space .pond-wrap {
+      background: linear-gradient(180deg,#05051a 0%,#0a0a2e 18%,#0f0f40 19%,#050530 100%);
+      border-color: #3344cc66;
+    }
+    body.theme-space .fish { filter: hue-rotate(200deg) brightness(1.2); }
+
+    body.theme-ancient {
+      --bg1: #f0e8d0; --bg2: #d4c090;
+      --panel: rgba(255,248,220,0.85); --border: #c8a054;
+      --text: #5b3b1d; --accent: #c8a054; --accent2: #a07030;
+    }
+    body.theme-ancient .pond-wrap {
+      background: linear-gradient(180deg,#8ab4a0 0%,#6a9880 18%,#4a7860 19%,#2a5840 100%);
+      border-color: #c8a054;
+    }
+
+    @media (max-width: 860px) {
+      .topbar { grid-template-columns: repeat(2, 1fr); }
+      .main { grid-template-columns: 1fr; }
+      .pond-wrap { min-height: 500px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div class="stat"><div class="label">剩余时间</div><div class="value" id="timeText">30</div></div>
+      <div class="stat"><div class="label">分数</div><div class="value" id="scoreText">0</div></div>
+      <div class="stat"><div class="label">连钓</div><div class="value" id="comboText">x0</div></div>
+      <div class="stat"><div class="label">已钓到</div><div class="value" id="caughtText">0</div></div>
+      <div class="stat"><div class="label">命中率</div><div class="value" id="rateText">0%</div></div>
+    </div>
+
+    <div class="main">
+      <div class="pond-wrap" id="pondWrap">
+        <div class="sky-deco"></div>
+        <div class="shore"></div>
+        <div class="cow">🐮</div>
+        <div class="rod"></div>
+        <div class="line" id="line"></div>
+        <div class="hook" id="hook">🪝</div>
+        <div class="water-area" id="waterArea"></div>
+        <div class="overlay" id="resultOverlay">
+          <div class="overlay-card">
+            <h2>哞！收竿啦</h2>
+            <p>今天一共钓到 <span id="finalCaught">0</span> 条鱼</p>
+            <p>最终得分：<span id="finalScore">0</span></p>
+            <p>最高连钓：<span id="finalCombo">0</span></p>
+            <div style="height:12px"></div>
+            <button class="primary" id="restartBtn">再钓一轮</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar">
+        <div class="panel">
+          <h3>小牛状态</h3>
+          <div class="feedback" id="feedback">点水面下钩，钩到鱼再点一下收杆</div>
+          <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+
+        <div class="panel">
+          <h3>操作</h3>
+          <div class="actions">
+            <button class="primary" id="castBtn">下钩</button>
+            <button class="secondary" id="pullBtn">收杆</button>
+            <button class="secondary" id="resetBtn">重新开始</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>规则</h3>
+          <ul class="tips">
+            <li>点“下钩”后，鱼会在水里游</li>
+            <li>钩子碰到鱼时，再点“收杆”得分更高</li>
+            <li>金鱼分更高，稀有鱼奖励更多</li>
+            <li>连续成功收杆会累积连钓</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const pondWrap = document.getElementById('pondWrap');
+    const waterArea = document.getElementById('waterArea');
+    const line = document.getElementById('line');
+    const hook = document.getElementById('hook');
+    const castBtn = document.getElementById('castBtn');
+    const pullBtn = document.getElementById('pullBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const resultOverlay = document.getElementById('resultOverlay');
+    const timeText = document.getElementById('timeText');
+    const scoreText = document.getElementById('scoreText');
+    const comboText = document.getElementById('comboText');
+    const caughtText = document.getElementById('caughtText');
+    const rateText = document.getElementById('rateText');
+    const feedback = document.getElementById('feedback');
+    const progressFill = document.getElementById('progressFill');
+    const finalCaught = document.getElementById('finalCaught');
+    const finalScore = document.getElementById('finalScore');
+    const finalCombo = document.getElementById('finalCombo');
+
+    const FISH_TYPES = [
+      { emoji: '🐟', score: 10, className: '' },
+      { emoji: '🐠', score: 18, className: 'gold' },
+      { emoji: '🦈', score: 30, className: 'rare' },
+      { emoji: '🐡', score: 22, className: 'gold' },
+      { emoji: '🐟', score: 8, className: 'shadow' }
+    ];
+
+    let fishes = [];
+    let score = 0;
+    let combo = 0;
+    let maxCombo = 0;
+    let caught = 0;
+    let attempts = 0;
+    let timeLeft = 30;
+    let timer = null;
+    let raf = null;
+    let gameRunning = false;
+    let hookState = 'idle'; // idle, dropping, waiting, hooked, pulling
+    let hookX = 210;
+    let hookY = 82;
+    let targetY = 82;
+    let hookedFishId = null;
+    let startTs = 0;
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function spawnFish() {
+      const type = FISH_TYPES[Math.floor(Math.random() * FISH_TYPES.length)];
+      const fish = {
+        id: Math.random().toString(36).slice(2),
+        x: Math.random() < 0.5 ? -80 : waterArea.clientWidth + 20,
+        y: rand(26, waterArea.clientHeight - 72),
+        speed: rand(1.2, 2.8) * (Math.random() < 0.5 ? 1 : -1),
+        bob: rand(0.3, 1.2),
+        phase: rand(0, Math.PI * 2),
+        type,
+        el: null,
+        hooked: false
+      };
+      if (fish.x < 0 && fish.speed < 0) fish.speed *= -1;
+      if (fish.x > waterArea.clientWidth && fish.speed > 0) fish.speed *= -1;
+      const el = document.createElement('div');
+      el.className = `fish ${type.className}`;
+      el.textContent = type.emoji;
+      waterArea.appendChild(el);
+      fish.el = el;
+      fishes.push(fish);
+    }
+
+    function ensureFishCount() {
+      while (fishes.length < 7) spawnFish();
+    }
+
+    function spawnBubble() {
+      const b = document.createElement('div');
+      b.className = 'bubble';
+      b.textContent = '○';
+      b.style.left = `${rand(30, waterArea.clientWidth - 30)}px`;
+      b.style.top = `${rand(40, waterArea.clientHeight - 20)}px`;
+      waterArea.appendChild(b);
+      setTimeout(() => b.remove(), 2400);
+    }
+
+    function updateHookVisual() {
+      hook.style.left = `${hookX}px`;
+      hook.style.top = `${hookY}px`;
+      line.style.left = `${hookX}px`;
+      line.style.top = `66px`;
+      line.style.height = `${Math.max(0, hookY - 66)}px`;
+    }
+
+    function updateUI() {
+      scoreText.textContent = String(score);
+      comboText.textContent = `x${combo}`;
+      caughtText.textContent = String(caught);
+      timeText.textContent = String(timeLeft);
+      const rate = attempts ? Math.round((caught / attempts) * 100) : 0;
+      rateText.textContent = `${rate}%`;
+      progressFill.style.width = `${Math.min(100, (caught / 12) * 100)}%`;
+    }
+
+    function floatText(text, x, y) {
+      const el = document.createElement('div');
+      el.className = 'float-text';
+      el.textContent = text;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      pondWrap.appendChild(el);
+      setTimeout(() => el.remove(), 1000);
+    }
+
+    function setFeedback(text) {
+      feedback.textContent = text;
+    }
+
+    function castHook() {
+      if (!gameRunning || hookState === 'dropping' || hookState === 'hooked' || hookState === 'pulling') return;
+      attempts += 1;
+      targetY = rand(200, pondWrap.clientHeight - 60);
+      hookState = 'dropping';
+      setFeedback('小牛下钩中…盯住鱼！');
+      updateUI();
+    }
+
+    function pullHook() {
+      if (!gameRunning || hookState === 'idle') return;
+      if (hookState === 'hooked') {
+        const fish = fishes.find(f => f.id === hookedFishId);
+        if (fish) {
+          caught += 1;
+          combo += 1;
+          maxCombo = Math.max(maxCombo, combo);
+          const add = fish.type.score + Math.min(combo, 8);
+          score += add;
+          floatText(`+${add}`, hookX, hookY);
+          setFeedback(combo >= 3 ? `连钓 ${combo}！小牛今天手感火热` : '哞！钓上来啦');
+          fish.el.remove();
+          fishes = fishes.filter(f => f.id !== fish.id);
+          hookedFishId = null;
+        }
+      } else {
+        combo = 0;
+        setFeedback('空杆了，再来一钩');
+      }
+      hookState = 'pulling';
+      targetY = 82;
+      updateUI();
+    }
+
+    function resetFish(fish) {
+      fish.x = fish.speed > 0 ? -80 : waterArea.clientWidth + 20;
+      fish.y = rand(26, waterArea.clientHeight - 72);
+      fish.hooked = false;
+    }
+
+    function animate(ts) {
+      if (!startTs) startTs = ts;
+      const t = ts / 1000;
+
+      if (Math.random() < 0.03) spawnBubble();
+
+      if (hookState === 'dropping') {
+        hookY += 6;
+        if (hookY >= targetY) {
+          hookY = targetY;
+          hookState = 'waiting';
+          setFeedback('鱼快来了，看到碰到就收杆');
+        }
+      } else if (hookState === 'pulling') {
+        hookY -= 8;
+        if (hookY <= 82) {
+          hookY = 82;
+          hookState = 'idle';
+          hookedFishId = null;
+          setFeedback('继续下钩，小牛还能钓');
+        }
+      }
+
+      for (const fish of fishes) {
+        if (!fish.hooked) {
+          fish.x += fish.speed;
+          fish.y += Math.sin(t * 3 * fish.bob + fish.phase) * 0.5;
+          if ((fish.speed > 0 && fish.x > waterArea.clientWidth + 90) || (fish.speed < 0 && fish.x < -90)) {
+            resetFish(fish);
+          }
+          const dx = (fish.x + 36) - hookX;
+          const dy = (fish.y + 20) - (hookY - 132);
+          if ((hookState === 'waiting' || hookState === 'dropping') && Math.abs(dx) < 34 && Math.abs(dy) < 22) {
+            fish.hooked = true;
+            hookedFishId = fish.id;
+            hookState = 'hooked';
+            setFeedback('上钩了！快点收杆');
+          }
+        }
+        if (fish.hooked && fish.id === hookedFishId) {
+          fish.x = hookX - 36;
+          fish.y = hookY - 132 - 8;
+        }
+        fish.el.style.left = `${fish.x}px`;
+        fish.el.style.top = `${fish.y}px`;
+        fish.el.style.transform = `scaleX(${fish.speed > 0 ? 1 : -1})`;
+      }
+
+      updateHookVisual();
+      ensureFishCount();
+      raf = requestAnimationFrame(animate);
+    }
+
+    function startGame() {
+      clearInterval(timer);
+      timeLeft = 30;
+      score = 0;
+      combo = 0;
+      maxCombo = 0;
+      caught = 0;
+      attempts = 0;
+      hookState = 'idle';
+      hookY = 82;
+      targetY = 82;
+      hookedFishId = null;
+      resultOverlay.classList.remove('show');
+      waterArea.innerHTML = '';
+      fishes = [];
+      ensureFishCount();
+      updateHookVisual();
+      updateUI();
+      setFeedback('点水面下钩，钩到鱼再点一下收杆');
+      gameRunning = true;
+      timer = setInterval(() => {
+        timeLeft -= 1;
+        updateUI();
+        if (timeLeft <= 0) endGame();
+      }, 1000);
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(animate);
+    }
+
+    function endGame() {
+      clearInterval(timer);
+      cancelAnimationFrame(raf);
+      gameRunning = false;
+      finalCaught.textContent = String(caught);
+      finalScore.textContent = String(score);
+      finalCombo.textContent = String(maxCombo);
+      resultOverlay.classList.add('show');
+      setFeedback('今天收获不错，小牛准备回家');
+      // 通知主游戏
+      const xp = caught * 8 + Math.floor(score / 5);
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({
+          type: 'fishGameComplete',
+          xp,
+          score,
+          caught,
+          maxCombo,
+          universe: currentUniverse
+        }, '*');
+      }
+    }
+
+    castBtn.addEventListener('click', castHook);
+    pullBtn.addEventListener('click', pullHook);
+    resetBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+    waterArea.addEventListener('click', () => {
+      if (!gameRunning) return;
+      if (hookState === 'idle') castHook();
+      else pullHook();
+    });
+
+
+    // ── 宇宙主题 ──
+    const UNIVERSE_MAP = { normal:'', cyber:'theme-cyberpunk', ocean:'theme-underwater', space:'theme-space', ancient:'theme-ancient' };
+    let currentUniverse = 'normal';
+
+    function setUniverse(key) {
+      currentUniverse = key;
+      document.body.className = UNIVERSE_MAP[key] || '';
+    }
+
+    // 接收主游戏发来的宇宙
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'setUniverse') {
+        setUniverse(e.data.universe || 'normal');
+      }
+    });
+
+    startGame();
+  </script>
+</body>
+</html>

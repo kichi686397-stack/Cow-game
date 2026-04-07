@@ -512,6 +512,17 @@
   </div>
 </div>
 
+<!-- 钓鱼游戏弹窗 -->
+<div class="changelog-overlay" id="fishGameOverlay">
+  <div style="background:#0e2a45;border-radius:24px;box-shadow:0 18px 50px rgba(10,40,80,.5);width:min(1000px,95vw);max-height:92vh;overflow:hidden;position:relative;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px 0">
+      <span style="font-weight:bold;font-size:16px;color:#7df9ff">🎣 小牛钓鱼</span>
+      <button onclick="closeFishGameOverlay()" style="font-size:20px;background:none;border:none;cursor:pointer;color:#7df9ff;line-height:1">✕</button>
+    </div>
+    <iframe id="fishGameFrame" src="fishing_game.html" style="width:100%;height:75vh;border:none;border-radius:0 0 24px 24px"></iframe>
+  </div>
+</div>
+
 <div id="tutOverlay">
     <div id="tutCard">
         <div class="tut-icon" id="tutIcon">🐄</div>
@@ -2763,8 +2774,7 @@ function closeFishScene(){
 
 fishLeaveBtn.addEventListener('click',closeFishScene);
 fishBtn.addEventListener('click',function(){
-    if(fishScene.classList.contains('open')) closeFishScene();
-    else openFishScene();
+    openFishGameOverlay();
 });
 
 fishCastBtn.addEventListener('click',function(){
@@ -3714,23 +3724,33 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '10.1.3';
+var CURRENT_VER = '10.2.0';
 
-// 版本更新弹窗内容（老用户首次打开时显示）
 var VER_POPUP = {
-    emoji:   '🏅',
-    title:   '修复了耕地排行榜上传异常',
-    okBtn:   '我知道了🐄',
+    emoji:   '🎣',
+    title:   '小游戏全面独立化',
+    okBtn:   '去玩玩！🐄',
     warning: '',
     items: [
-        '耕地排行榜改为只在点击上传后才上榜',
-        '修复闪电耕作 0.0s 被当成有效成绩保存的问题',
-        '耕地上传时会自动跳过无效成绩和空记录',
+        '🎣 钓鱼游戏全新升级，独立成单独页面',
+        '🌍 钓鱼/打工游戏自动同步当前宇宙主题',
+        '🎮 游戏结束后自动回传XP，无缝衔接',
+        '🍀 右上角互动指南浓缩为小图标菜单',
     ]
 };
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
+{
+        ver: 'v10.2.0', title: '小游戏独立化 + 钓鱼升级',
+        items: [
+            '🎣 钓鱼游戏拆分为独立页面，全新玩法：下钩/收杆/连钓/命中率',
+            '🌍 钓鱼和打工游戏自动同步主游戏宇宙主题',
+            '⚡ 游戏完成后自动回传XP和统计数据给小牛',
+            '🏅 钓鱼完成后自动上传排行榜（需提前填写昵称）',
+            '🍀 右上角互动指南浓缩为🍀图标，点开含版本日志和公告入口',
+        ]
+    },
 {
         ver: 'v10.1.3', title: '耕地上传修复',
         items: [
@@ -4561,6 +4581,40 @@ window.addEventListener('message', function(e){
         }
         checkAchievements();
         scheduleSave();
+    }
+});
+
+/* ═══ 钓鱼游戏 iframe 弹窗 ═══ */
+function openFishGameOverlay(){
+    document.getElementById('fishGameOverlay').classList.add('open');
+    setTimeout(function(){
+        var frame = document.getElementById('fishGameFrame');
+        if(frame && frame.contentWindow){
+            frame.contentWindow.postMessage({type:'setUniverse', universe: currentUniverse||'normal'}, '*');
+        }
+    }, 600);
+}
+function closeFishGameOverlay(){
+    document.getElementById('fishGameOverlay').classList.remove('open');
+}
+// 接收钓鱼游戏完成回调
+window.addEventListener('message', function(e){
+    if(e.data && e.data.type === 'fishGameComplete'){
+        var xp = e.data.xp || 10;
+        feedCount += xp;
+        updateLevel(true); checkSkinUnlock(); showXpGain(xp);
+        bubble('钓鱼归来！获得 '+xp+' XP 🎣', 2500);
+        var caught = e.data.caught || 0;
+        ST.fishCaught = (ST.fishCaught||0) + caught;
+        if(!ST._fishUniverse) ST._fishUniverse={};
+        ST._fishUniverse[e.data.universe||'normal'] = 1;
+        checkAchievements(); scheduleSave();
+        // 自动上传排行榜
+        var name = localStorage.getItem('pixelcow_lbname');
+        if(name && caught > 0){
+            var uniLabel = {normal:'普通',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[e.data.universe||'normal']||'';
+            sbUpsert(name, 'fish', ST.fishCaught, uniLabel);
+        }
     }
 });
 
