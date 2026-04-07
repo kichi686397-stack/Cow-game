@@ -356,7 +356,7 @@
       <div class="pond-wrap" id="pondWrap">
         <div class="sky-deco"></div>
         <div class="shore"></div>
-        <div class="cow">🐮</div>
+        <img id="cowImg" class="cow" src="images/cow-farm.png" alt="🐮" onerror="this.style.display='none';this.nextSibling.style.display='block'" style="width:64px;height:64px;object-fit:contain"><span style="font-size:48px;display:none">🐮</span>
         <div class="rod"></div>
         <div class="line" id="line"></div>
         <div class="hook" id="hook">🪝</div>
@@ -679,11 +679,20 @@
 
     // ── 宇宙主题 ──
     const UNIVERSE_MAP = { normal:'', cyber:'theme-cyberpunk', ocean:'theme-underwater', space:'theme-space', ancient:'theme-ancient' };
+    const UNIVERSE_COW = {
+      normal: 'images/cow-farm.png',
+      cyber:  'images/cow-cyber.png',
+      ocean:  'images/cow-underwater.png',
+      space:  'images/cow-space.png',
+      ancient:'images/cow-ancient.png'
+    };
     let currentUniverse = 'normal';
 
     function setUniverse(key) {
       currentUniverse = key;
       document.body.className = UNIVERSE_MAP[key] || '';
+      var cowImg = document.getElementById('cowImg');
+      if(cowImg) cowImg.src = UNIVERSE_COW[key] || UNIVERSE_COW.normal;
     }
 
     // 接收主游戏发来的宇宙

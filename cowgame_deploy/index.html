@@ -718,6 +718,7 @@ var SPR={
 
 /* 打工小游戏全局入口（在闭包外暴露） */
 var openFarmGame, closeFarmGame;
+var openFishGameOverlay, closeFishGameOverlay;
 
 (function(){
 'use strict';
@@ -1391,8 +1392,8 @@ function drawOx(){
     // 高等级光晕特效（6级及以上）
     var lvIdx=getLvIdx();
     if(!window.fxDisabled && lvIdx>=5){
-        var glowColors=['#a855f7','#8b5cf6','#7c3aed','#6d28d9','#ffd700'];
-        var gc=glowColors[Math.min(lvIdx-5,4)];
+        var glowColors=['#a855f7','#8b5cf6','#7c3aed','#6d28d9','#a855f7']; // 6-9级都是紫色系
+        var gc= lvIdx>=9 ? '#ffd700' : glowColors[Math.min(lvIdx-5,3)]; // 只有10级(idx=9)是金色
         var glowR=6+(lvIdx-5)*3;
         ctx.save();
         ctx.globalCompositeOperation='source-over';
@@ -3712,9 +3713,9 @@ oxCon.style.left=(W/2-80)+'px';
 setDir(1);
 
 // 读档
-var hasSave=loadGame();
+updateSky(); // 先设置默认天空
+var hasSave=loadGame(); // 存档加载后会覆盖宇宙背景
 updateLevel(false);
-updateSky();
 updateThirstUI();
 setMood();
 renderSkinGrid();
@@ -3724,33 +3725,23 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '10.2.0';
+var CURRENT_VER = '10.1.3';
 
+// 版本更新弹窗内容（老用户首次打开时显示）
 var VER_POPUP = {
-    emoji:   '🎣',
-    title:   '小游戏全面独立化',
-    okBtn:   '去玩玩！🐄',
+    emoji:   '🏅',
+    title:   '修复了耕地排行榜上传异常',
+    okBtn:   '我知道了🐄',
     warning: '',
     items: [
-        '🎣 钓鱼游戏全新升级，独立成单独页面',
-        '🌍 钓鱼/打工游戏自动同步当前宇宙主题',
-        '🎮 游戏结束后自动回传XP，无缝衔接',
-        '🍀 右上角互动指南浓缩为小图标菜单',
+        '耕地排行榜改为只在点击上传后才上榜',
+        '修复闪电耕作 0.0s 被当成有效成绩保存的问题',
+        '耕地上传时会自动跳过无效成绩和空记录',
     ]
 };
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
-{
-        ver: 'v10.2.0', title: '小游戏独立化 + 钓鱼升级',
-        items: [
-            '🎣 钓鱼游戏拆分为独立页面，全新玩法：下钩/收杆/连钓/命中率',
-            '🌍 钓鱼和打工游戏自动同步主游戏宇宙主题',
-            '⚡ 游戏完成后自动回传XP和统计数据给小牛',
-            '🏅 钓鱼完成后自动上传排行榜（需提前填写昵称）',
-            '🍀 右上角互动指南浓缩为🍀图标，点开含版本日志和公告入口',
-        ]
-    },
 {
         ver: 'v10.1.3', title: '耕地上传修复',
         items: [
@@ -4585,7 +4576,7 @@ window.addEventListener('message', function(e){
 });
 
 /* ═══ 钓鱼游戏 iframe 弹窗 ═══ */
-function openFishGameOverlay(){
+openFishGameOverlay = function(){
     document.getElementById('fishGameOverlay').classList.add('open');
     setTimeout(function(){
         var frame = document.getElementById('fishGameFrame');
@@ -4593,10 +4584,10 @@ function openFishGameOverlay(){
             frame.contentWindow.postMessage({type:'setUniverse', universe: currentUniverse||'normal'}, '*');
         }
     }, 600);
-}
-function closeFishGameOverlay(){
+};
+closeFishGameOverlay = function(){
     document.getElementById('fishGameOverlay').classList.remove('open');
-}
+};
 // 接收钓鱼游戏完成回调
 window.addEventListener('message', function(e){
     if(e.data && e.data.type === 'fishGameComplete'){
@@ -4648,6 +4639,7 @@ document.getElementById('appearanceSel').addEventListener('change',function(){
 });
 
 /* 特效开关 */
+window.fxDisabled = localStorage.getItem('pixelcow_fx_off') === '1';
 (function(){
     var btn=document.getElementById('fxToggleBtn');
     if(!btn)return;
