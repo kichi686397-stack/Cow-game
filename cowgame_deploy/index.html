@@ -635,6 +635,7 @@
         <div class="game-hud" id="gameHud" style="display:none">
             <span>🎯 <span class="game-score-txt" id="gameScoreTxt">0</span></span>
             <span class="game-timer-txt" id="gameTimerTxt">30</span>
+            <span style="font-size:12px;color:#5D4037">阶段 <span id="gameStageTxt">普通</span></span>
             <span style="font-size:12px;color:#888">最佳 <span id="gameBestHud">0</span></span>
             <button id="gameExitBtn" style="font-size:12px;padding:4px 10px;border-radius:8px;border:1.5px solid #ddd;background:rgba(255,255,255,.9);cursor:pointer;color:#888">✕ 退出</button>
         </div>
@@ -3404,12 +3405,44 @@ var gameHud=document.getElementById('gameHud');
 var gameStartScr=document.getElementById('gameStartScreen');
 var gameEndScr=document.getElementById('gameEndScreen');
 
+function getGameDifficulty(gameTimeLeft, gameScore){
+    var scoreBoost=Math.min(20,Math.max(0,gameScore));
+    if(gameTimeLeft>20){
+        return {
+            spawnIntervalMs:Math.max(740,900-scoreBoost*5),
+            fallDurationMin:2.45,
+            fallDurationMax:3.15,
+            harmChanceBoost:0.00
+        };
+    }
+    if(gameTimeLeft>8){
+        return {
+            spawnIntervalMs:Math.max(560,760-scoreBoost*5),
+            fallDurationMin:1.8,
+            fallDurationMax:2.45,
+            harmChanceBoost:0.08
+        };
+    }
+    return {
+        spawnIntervalMs:Math.max(360,560-scoreBoost*5),
+        fallDurationMin:1.1,
+        fallDurationMax:1.75,
+        harmChanceBoost:0.18
+    };
+}
+function getGameStageText(gameTimeLeft){
+    if(gameTimeLeft>20)return '普通';
+    if(gameTimeLeft>8)return '紧张';
+    return '狂热';
+}
+
 function startGame(){
     gameScore=0;gameTimeLeft=30;gameActive=true;
     gameStartScr.style.display='none';gameEndScr.style.display='none';
     gameHud.style.display='flex';
     document.getElementById('gameScoreTxt').textContent='0';
     document.getElementById('gameTimerTxt').textContent='30';
+    document.getElementById('gameStageTxt').textContent=getGameStageText(gameTimeLeft);
     document.getElementById('gameBestHud').textContent=gameBest;
     gameWrap.querySelectorAll('.g-item,.g-basket,.g-miss').forEach(function(el){el.remove();});
 
@@ -3435,16 +3468,23 @@ function startGame(){
     gameTimerIv=setInterval(function(){
         gameTimeLeft--;
         document.getElementById('gameTimerTxt').textContent=gameTimeLeft;
+        document.getElementById('gameStageTxt').textContent=getGameStageText(gameTimeLeft);
         if(gameTimeLeft<=5) document.getElementById('gameTimerTxt').style.color='#E53935';
         if(gameTimeLeft<=0)endGame(basket,moveBasket);
     },1000);
 
-    /* 生成下落食物 */
-    gameSpawnIv=setInterval(function(){
+    function spawnOneItem(){
         if(!gameActive)return;
+        var diff=getGameDifficulty(gameTimeLeft,gameScore);
         var uni=normalizeUniverseKey(currentUniverse);
         var pool=UNIVERSE_FRUIT[uni]||UNIVERSE_FRUIT.normal;
         var fruitDef=pool[Math.floor(Math.random()*pool.length)];
+        if(!fruitDef.harm && diff.harmChanceBoost>0){
+            var harmPool=pool.filter(function(it){return !!it.harm;});
+            if(harmPool.length && Math.random()<diff.harmChanceBoost){
+                fruitDef=harmPool[Math.floor(Math.random()*harmPool.length)];
+            }
+        }
 
         var item=document.createElement('div');
         item.className='g-item';
@@ -3476,7 +3516,7 @@ function startGame(){
         gameWrap.appendChild(item);
 
         var startT=Date.now();
-        var fallDur=2.2+Math.random()*1.2;
+        var fallDur=diff.fallDurationMin+Math.random()*(diff.fallDurationMax-diff.fallDurationMin);
         var gh=Math.max(300, gameWrap.offsetHeight)-58;
 
         (function fallStep(){
@@ -3530,12 +3570,22 @@ function startGame(){
             if(y>gameWrap.offsetHeight){item.remove();return;}
             requestAnimationFrame(fallStep);
         })();
-    },700);
+    }
+    function scheduleNextSpawn(){
+        if(!gameActive)return;
+        var diff=getGameDifficulty(gameTimeLeft,gameScore);
+        gameSpawnIv=setTimeout(function(){
+            if(!gameActive)return;
+            spawnOneItem();
+            scheduleNextSpawn();
+        },diff.spawnIntervalMs);
+    }
+    scheduleNextSpawn();
 }
 
 function endGame(basket,moveBasket){
     gameActive=false;
-    clearInterval(gameTimerIv);clearInterval(gameSpawnIv);
+    clearInterval(gameTimerIv);clearTimeout(gameSpawnIv);
     if(basket){
         gameWrap.removeEventListener('mousemove',moveBasket._h);
         gameWrap.removeEventListener('touchmove',moveBasket._t);
@@ -3566,7 +3616,7 @@ document.getElementById('gameStartBtn').addEventListener('click',startGame);
 document.getElementById('gameExitBtn').addEventListener('click',function(){
     if(!gameActive)return;
     gameActive=false;
-    clearInterval(gameTimerIv);clearInterval(gameSpawnIv);
+    clearInterval(gameTimerIv);clearTimeout(gameSpawnIv);
     gameWrap.querySelectorAll('.g-item,.g-basket,.g-miss').forEach(function(el){el.remove();});
     gameHud.style.display='none';
     document.getElementById('gameOverlay').classList.remove('open');
