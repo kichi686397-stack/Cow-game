@@ -3496,6 +3496,15 @@ function startGame(){
     gameWrap.addEventListener('mousemove',moveBasket._h=function(e){if(gameActive)moveBasket(e.clientX);});
     gameWrap.addEventListener('touchmove',moveBasket._t=function(e){if(gameActive){e.preventDefault();moveBasket(e.touches[0].clientX);}},{passive:false});
 
+    function isCaught(itemEl,basketEl){
+        var itemRect=itemEl.getBoundingClientRect();
+        var basketRect=basketEl.getBoundingClientRect();
+        var isMobile=window.matchMedia('(pointer: coarse)').matches||window.innerWidth<=768;
+        var overlapThresholdRatio=isMobile?0.32:0.38;
+        var overlapWidth=Math.max(0,Math.min(itemRect.right,basketRect.right)-Math.max(itemRect.left,basketRect.left));
+        return itemRect.bottom>=basketRect.top && overlapWidth>=itemRect.width*overlapThresholdRatio;
+    }
+
     /* 计时 */
     gameTimerIv=setInterval(function(){
         gameTimeLeft--;
@@ -3563,9 +3572,7 @@ function startGame(){
             item.style.top=y+'px';
 
             if(y>=gameWrap.offsetHeight-88){
-                var itemLx=parseFloat(item.style.left)+2; // 修正图片宽度偏移
-                var diff=Math.abs(itemLx-bx);
-                if(diff<14){
+                if(isCaught(item,basket)){
                     item.classList.add('caught');
                     if(fruitDef.harm){
                         // 有害！扣分
