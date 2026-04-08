@@ -1,5 +1,30 @@
 const CATEGORIES = ["ach", "level", "fruit", "fish"];
 const MAX = 200;
+const DEFAULT_CATEGORY = "level";
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 50;
+
+const badRequest = (error) => Response.json({ ok: false, error }, { status: 400 });
+
+function normalizeCategory(cat) {
+    return CATEGORIES.includes(cat) ? cat : DEFAULT_CATEGORY;
+}
+
+function normalizeLimit(rawLimit) {
+    const parsed = Number.parseInt(rawLimit ?? `${DEFAULT_LIMIT}`, 10);
+    const safeLimit = Number.isNaN(parsed) ? DEFAULT_LIMIT : parsed;
+    return Math.min(safeLimit, MAX_LIMIT);
+}
+
+function normalizeEntry({ cat, value, extra, name }) {
+    return {
+        cat,
+        value: Math.floor(value),
+        extra: extra ? String(extra).slice(0, 20) : undefined,
+        name: String(name || "匿名小牛").slice(0, 10).trim() || "匿名小牛",
+        time: Date.now(),
+    };
+}
 
 export async function onRequest(context) {
     const { request, env } = context;
@@ -11,38 +36,33 @@ export async function onRequest(context) {
     }
 
     if (request.method === "GET") {
-        const cat = CATEGORIES.includes(url.searchParams.get("cat"))
-            ? url.searchParams.get("cat") : "level";
-        const limit = Math.min(parseInt(url.searchParams.get("limit") || "10"), 50);
+        const cat = normalizeCategory(url.searchParams.get("cat"));
+        const limit = normalizeLimit(url.searchParams.get("limit"));
         const scores = (await KV.get(cat, { type: "json" })) || [];
         return Response.json({ ok: true, scores: scores.slice(0, limit) });
     }
 
     if (request.method === "POST") {
         let body;
-        try { body = await request.json(); }
-        catch { return Response.json({ ok: false, error: "bad json" }, { status: 400 }); }
+        try {
+            body = await request.json();
+        } catch {
+            return badRequest("bad json");
+        }
 
-        const { cat, value, extra } = body;
-        const name = String(body.name || "匿名小牛").slice(0, 10).trim() || "匿名小牛";
+        const entry = normalizeEntry(body);
+        if (!CATEGORIES.includes(entry.cat) || typeof body.value !== "number" || body.value < 0) {
+            return badRequest("invalid");
+        }
 
-        if (!CATEGORIES.includes(cat) || typeof value !== "number" || value < 0)
-            return Response.json({ ok: false, error: "invalid" }, { status: 400 });
+        const scores = (await KV.get(entry.cat, { type: "json" })) || [];
+        const existingIndex = scores.findIndex((score) => score.name === entry.name);
 
-        const scores = (await KV.get(cat, { type: "json" })) || [];
-        const existIdx = scores.findIndex(s => s.name === name);
-        const entry = {
-            name,
-            value: Math.floor(value),
-            extra: extra ? String(extra).slice(0, 20) : undefined,
-            time: Date.now()
-        };
-
-        if (existIdx >= 0) {
-            if (value > scores[existIdx].value) {
-                scores[existIdx] = entry;
+        if (existingIndex >= 0) {
+            if (entry.value > scores[existingIndex].value) {
+                scores[existingIndex] = entry;
             } else {
-                const rank = scores.findIndex(s => s.name === name) + 1;
+                const rank = existingIndex + 1;
                 return Response.json({ ok: true, rank, improved: false });
             }
         } else {
@@ -51,8 +71,8 @@ export async function onRequest(context) {
 
         scores.sort((a, b) => b.value - a.value);
         const trimmed = scores.slice(0, MAX);
-        await KV.put(cat, JSON.stringify(trimmed));
-        const rank = trimmed.findIndex(s => s.name === name) + 1;
+        await KV.put(entry.cat, JSON.stringify(trimmed));
+        const rank = trimmed.findIndex((score) => score.name === entry.name) + 1;
         return Response.json({ ok: true, rank, total: trimmed.length, improved: true });
     }
 
