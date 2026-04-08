@@ -674,6 +674,7 @@
     <button class="pop-ok-btn" onclick="document.getElementById('achPopup').classList.remove('show')">好的！</button>
 </div>
 
+<script src="shared/universe-config.js"></script>
 <script>
 var SPR={
   fish_default_1:"sprites/fish_default_1.png",
@@ -722,6 +723,18 @@ var openFishGameOverlay, closeFishGameOverlay;
 
 (function(){
 'use strict';
+
+
+var universeConfig = window.COWGAME_UNIVERSE_CONFIG;
+function normalizeUniverseKey(key){
+    return universeConfig.normalizeUniverseKey(key);
+}
+function universeFullLabel(key){
+    return universeConfig.getUniverse(normalizeUniverseKey(key)).labels.full;
+}
+function universeShortLabel(key){
+    return universeConfig.getUniverse(normalizeUniverseKey(key)).labels.short;
+}
 
 /* ═══ 草地 ═══ */
 function makeGrass(id,cnt){var g=document.getElementById(id);for(var i=0;i<cnt;i++){var b=document.createElement('div');b.className='grass-blade';b.style.animationDelay=(Math.random()*2)+'s';b.style.animationDuration=(1.6+Math.random()*.8)+'s';g.appendChild(b);}}
@@ -1638,7 +1651,7 @@ function updateThirstUI(){
 /* ═══ 牛棚绘制 ═══ */
 function drawBarn(isNight){
     var bc=barnCtx;bc.clearRect(0,0,190,165);
-    var uni=currentUniverse||'normal';
+    var uni=normalizeUniverseKey(currentUniverse);
 
     // 阴影
     bc.fillStyle='rgba(0,0,0,.12)';bc.beginPath();bc.ellipse(95,162,72,8,0,0,Math.PI*2);bc.fill();
@@ -2884,7 +2897,7 @@ function doReel(){
         if(fish.icon==='🦑') ST._squidCaught=1;
         // 各宇宙钓鱼记录
         if(!ST._fishUniverse) ST._fishUniverse={};
-        ST._fishUniverse[currentUniverse||'normal']=1;
+        ST._fishUniverse[normalizeUniverseKey(currentUniverse)]=1;
         // 特殊装备掉落
         if(fish.special){
             var dropSkin=SKINS.find(function(s){return s.id===fish.special;});
@@ -3375,7 +3388,7 @@ function makeSpriteEl(key, sizePx){
 
 // 更新两个小游戏的物品池（宇宙切换时调用）
 function updateGamePools(){
-    var uni=currentUniverse||'normal';
+    var uni=normalizeUniverseKey(currentUniverse);
     // 更新钓鱼池
     var fishPool=UNIVERSE_FISH[uni]||UNIVERSE_FISH.normal;
     // 保留💎宝石和👑王冠
@@ -3429,7 +3442,7 @@ function startGame(){
     /* 生成下落食物 */
     gameSpawnIv=setInterval(function(){
         if(!gameActive)return;
-        var uni=currentUniverse||'normal';
+        var uni=normalizeUniverseKey(currentUniverse);
         var pool=UNIVERSE_FRUIT[uni]||UNIVERSE_FRUIT.normal;
         var fruitDef=pool[Math.floor(Math.random()*pool.length)];
 
@@ -3910,7 +3923,7 @@ setTimeout(function(){spawnRabbit();},90000);
 /* ═══ 平行宇宙系统 ═══ */
 var UNIVERSES={
     normal:{
-        name:'🌿 普通农场',
+        name:'🌿 '+universeFullLabel('normal'),
         body:'linear-gradient(180deg,#87CEEB 0%,#B2EBF2 60%,#C8E6C9 100%)',
         ground:'linear-gradient(to bottom,#8B4513,#654321)',
         grassCol:'#32CD32',
@@ -3922,7 +3935,7 @@ var UNIVERSES={
         extraFn:null
     },
     cyber:{
-        name:'🌃 赛博朋克',
+        name:'🌃 '+universeFullLabel('cyber'),
         body:'linear-gradient(180deg,#0a0018 0%,#12002e 50%,#000814 100%)',
         ground:'linear-gradient(to bottom,#0d0025,#1a0040)',
         grassCol:'#ff00ff',
@@ -3934,7 +3947,7 @@ var UNIVERSES={
         extraFn:'drawCyberLines'
     },
     ocean:{
-        name:'🌊 深海水下',
+        name:'🌊 '+universeFullLabel('ocean'),
         body:'linear-gradient(180deg,#001529 0%,#003366 40%,#004d80 100%)',
         ground:'linear-gradient(to bottom,#1a4a2e,#0d3320)',
         grassCol:'#00ffcc',
@@ -3946,7 +3959,7 @@ var UNIVERSES={
         extraFn:'drawBubbles'
     },
     space:{
-        name:'🚀 太空站',
+        name:'🚀 '+universeFullLabel('space'),
         body:'linear-gradient(180deg,#000005 0%,#060620 50%,#0a0a30 100%)',
         ground:'linear-gradient(to bottom,#1a1a2e,#0d0d1a)',
         grassCol:'#888899',
@@ -3958,7 +3971,7 @@ var UNIVERSES={
         extraFn:'drawSpaceStars'
     },
     ancient:{
-        name:'🏯 古代农村',
+        name:'🏯 '+universeFullLabel('ancient'),
         body:'linear-gradient(180deg,#c4956a 0%,#e8c99a 50%,#d4a853 100%)',
         ground:'linear-gradient(to bottom,#5c3a1e,#3d2410)',
         grassCol:'#5a7a2e',
@@ -3978,6 +3991,7 @@ var cyberLines=[];
 
 function enterUniverse(id){
     if(id===currentUniverse)return;
+    id=normalizeUniverseKey(id);
     var u=UNIVERSES[id];
     if(!u)return;
     currentUniverse=id;
@@ -4508,7 +4522,7 @@ function uploadMyScores(){
         return;
     }
     var lvName = LVS[getLvIdx()].name;
-    var uniLabel = {normal:'普通农场',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[currentUniverse]||'';
+    var uniLabel = universeShortLabel(currentUniverse);
     var uploads = [
         {cat:'level', value:feedCount,            extra:'Lv.'+oxLevel+' '+lvName},
         {cat:'ach',   value:unlockedAchs.length,  extra:unlockedAchs.length+'/'+ACHS.length+'个'},
@@ -4537,7 +4551,7 @@ function uploadMyScores(){
 function submitScore(score, game){
     var name = localStorage.getItem('pixelcow_lbname');
     if(!name) return;
-    var uniLabel = {normal:'普通农场',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[currentUniverse]||'';
+    var uniLabel = universeShortLabel(currentUniverse);
     sbUpsert(name, game, score, uniLabel).catch(function(){});
 }
 
@@ -4550,7 +4564,7 @@ openFarmGame = function(){
     setTimeout(function(){
         var frame = document.getElementById('farmGameFrame');
         if(frame && frame.contentWindow){
-            frame.contentWindow.postMessage({type:'setUniverse', universe: currentUniverse||'normal'}, '*');
+            frame.contentWindow.postMessage({type:'setUniverse', universe: normalizeUniverseKey(currentUniverse)}, '*');
         }
     }, 600);
 };
@@ -4591,7 +4605,7 @@ openFishGameOverlay = function(){
     setTimeout(function(){
         var frame = document.getElementById('fishGameFrame');
         if(frame && frame.contentWindow){
-            frame.contentWindow.postMessage({type:'setUniverse', universe: currentUniverse||'normal'}, '*');
+            frame.contentWindow.postMessage({type:'setUniverse', universe: normalizeUniverseKey(currentUniverse)}, '*');
         }
     }, 600);
 };
@@ -4608,12 +4622,12 @@ window.addEventListener('message', function(e){
         var caught = e.data.caught || 0;
         ST.fishCaught = (ST.fishCaught||0) + caught;
         if(!ST._fishUniverse) ST._fishUniverse={};
-        ST._fishUniverse[e.data.universe||'normal'] = 1;
+        ST._fishUniverse[normalizeUniverseKey(e.data.universe)] = 1;
         checkAchievements(); scheduleSave();
         // 自动上传排行榜
         var name = localStorage.getItem('pixelcow_lbname');
         if(name && caught > 0){
-            var uniLabel = {normal:'普通',cyber:'赛博',ocean:'水下',space:'太空',ancient:'古代'}[e.data.universe||'normal']||'';
+            var uniLabel = universeShortLabel(e.data.universe);
             sbUpsert(name, 'fish', ST.fishCaught, uniLabel);
         }
     }
