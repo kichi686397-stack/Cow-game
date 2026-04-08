@@ -269,6 +269,7 @@
     </div>
   </div>
 
+  <script src="shared/universe-config.js"></script>
   <script>
     // ── 设备检测 (3) ──
     const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 600;
@@ -291,21 +292,20 @@
     const RING_CIRCUM = 113.1; // 2π×18
 
     // ── 主题 / 宇宙 ──
-    const UNIVERSE_MAP = { normal:'farm', cyber:'cyberpunk', ocean:'underwater', space:'space', ancient:'ancient' };
+    const universeConfig = window.COWGAME_UNIVERSE_CONFIG;
     const THEMES = {
-      farm:       { label:'普通农场', className:'', cow:'images/cow-farm.png' },
-      cyberpunk:  { label:'赛博朋克', className:'theme-cyberpunk', cow:'images/cow-cyber.png' },
-      underwater: { label:'深海水下', className:'theme-underwater', cow:'images/cow-underwater.png' },
-      space:      { label:'太空站',   className:'theme-space', cow:'images/cow-space.png' },
-      ancient:    { label:'古代农村', className:'theme-ancient', cow:'images/cow-ancient.png' }
+      farm: { className:'', cow:'images/cow-farm.png' }
     };
-    const themeFeedback = {
-      farm:       { start:'点地块，让小牛开始干活', win:'哞！耕完啦' },
-      cyberpunk:  { start:'点击霓虹地块，启动耕作', win:'赛博农田全部点亮' },
-      underwater: { start:'点开珊瑚田，小牛下潜', win:'海底农田已翻松' },
-      space:      { start:'点击舱外地块，开始耕作', win:'太空农舱开垦完成' },
-      ancient:    { start:'点地块，让老黄牛下田', win:'古田已翻好' }
-    };
+    const themeFeedback = {};
+    Object.keys(THEMES).forEach((themeKey) => {
+      themeFeedback[themeKey] = { start: '点地块，让小牛开始干活', win: '哞！耕完啦' };
+    });
+    universeConfig.UNIVERSE_KEYS.forEach((universeKey) => {
+      const themeKey = universeConfig.toFarmThemeKey(universeKey);
+      const universe = universeConfig.getUniverse(universeKey);
+      THEMES[themeKey] = { className: universe.themeClassName || '', cow: universe.cowImage || THEMES.farm.cow };
+      themeFeedback[themeKey] = universe.copy?.farm || themeFeedback.farm;
+    });
     let currentTheme = 'farm';
 
     // ── 游戏状态 ──
@@ -527,7 +527,7 @@
 
     // 接收主游戏宇宙
     window.addEventListener('message', e=>{
-      if (e.data?.type==='setUniverse') setTheme(UNIVERSE_MAP[e.data.universe]||'farm');
+      if (e.data?.type==='setUniverse') setTheme(universeConfig.toFarmThemeKey(e.data.universe));
     });
 
     // ── 7: 首次打开弹出说明 ──

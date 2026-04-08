@@ -402,6 +402,7 @@
     </div>
   </div>
 
+  <script src="shared/universe-config.js"></script>
   <script>
     const pondWrap = document.getElementById('pondWrap');
     const waterArea = document.getElementById('waterArea');
@@ -422,6 +423,7 @@
     const finalCaught = document.getElementById('finalCaught');
     const finalScore = document.getElementById('finalScore');
     const finalCombo = document.getElementById('finalCombo');
+    const universeConfig = window.COWGAME_UNIVERSE_CONFIG;
 
     const FISH_TYPES = [
       { emoji: '🐟', score: 10, className: '' },
@@ -651,7 +653,7 @@
       finalScore.textContent = String(score);
       finalCombo.textContent = String(maxCombo);
       resultOverlay.classList.add('show');
-      setFeedback('今天收获不错，小牛准备回家');
+      setFeedback((universeConfig.getUniverse(currentUniverse).copy?.fish?.end) || '今天收获不错，小牛准备回家');
       // 通知主游戏
       const xp = caught * 8 + Math.floor(score / 5);
       if (window.parent && window.parent !== window) {
@@ -678,27 +680,20 @@
 
 
     // ── 宇宙主题 ──
-    const UNIVERSE_MAP = { normal:'', cyber:'theme-cyberpunk', ocean:'theme-underwater', space:'theme-space', ancient:'theme-ancient' };
-    const UNIVERSE_COW = {
-      normal: 'images/cow-farm.png',
-      cyber:  'images/cow-cyber.png',
-      ocean:  'images/cow-underwater.png',
-      space:  'images/cow-space.png',
-      ancient:'images/cow-ancient.png'
-    };
     let currentUniverse = 'normal';
 
     function setUniverse(key) {
-      currentUniverse = key;
-      document.body.className = UNIVERSE_MAP[key] || '';
+      currentUniverse = universeConfig.normalizeUniverseKey(key);
+      const universe = universeConfig.getUniverse(currentUniverse);
+      document.body.className = universe.themeClassName || '';
       var cowImg = document.getElementById('cowImg');
-      if(cowImg) cowImg.src = UNIVERSE_COW[key] || UNIVERSE_COW.normal;
+      if(cowImg) cowImg.src = universe.cowImage || universeConfig.getUniverse('normal').cowImage;
     }
 
     // 接收主游戏发来的宇宙
     window.addEventListener('message', (e) => {
       if (e.data && e.data.type === 'setUniverse') {
-        setUniverse(e.data.universe || 'normal');
+        setUniverse(e.data.universe);
       }
     });
 
