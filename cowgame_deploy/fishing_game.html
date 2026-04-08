@@ -392,8 +392,8 @@
         <div class="panel">
           <h3>规则</h3>
           <ul class="tips">
-            <li>点“下钩”后，鱼会在水里游</li>
-            <li>钩子碰到鱼时，再点“收杆”得分更高</li>
+            <li>长按“下钩”蓄力，按越久抛得越远</li>
+            <li>收杆会按体积判定，可一次拉起多条鱼</li>
             <li>金鱼分更高，稀有鱼奖励更多</li>
             <li>连续成功收杆会累积连钓</li>
           </ul>
@@ -449,6 +449,9 @@
     let targetY = 82;
     let hookedFishId = null;
     let startTs = 0;
+    let castChargeStart = 0;
+    let castPower = 0;
+    let pendingCast = false;
 
     function rand(min, max) {
       return Math.random() * (max - min) + min;
@@ -523,31 +526,40 @@
       feedback.textContent = text;
     }
 
-    function castHook() {
+    function castHook(power = 0.35) {
       if (!gameRunning || hookState === 'dropping' || hookState === 'hooked' || hookState === 'pulling') return;
       attempts += 1;
-      targetY = rand(200, pondWrap.clientHeight - 60);
+      castPower = Math.max(0.12, Math.min(1, power));
+      targetY = 140 + (pondWrap.clientHeight - 200) * castPower;
       hookState = 'dropping';
-      setFeedback('小牛下钩中…盯住鱼！');
+      setFeedback(`小牛蓄力抛竿！力度 ${(castPower * 100).toFixed(0)}%`);
       updateUI();
     }
 
     function pullHook() {
       if (!gameRunning || hookState === 'idle') return;
-      if (hookState === 'hooked') {
-        const fish = fishes.find(f => f.id === hookedFishId);
-        if (fish) {
-          caught += 1;
-          combo += 1;
-          maxCombo = Math.max(maxCombo, combo);
+      const catchRadius = 46;
+      const caughtNow = [];
+      for (const fish of fishes) {
+        const dx = (fish.x + 36) - hookX;
+        const dy = (fish.y + 20) - (hookY - 132);
+        if (Math.hypot(dx, dy) <= catchRadius) caughtNow.push(fish);
+      }
+      if (caughtNow.length > 0) {
+        let addTotal = 0;
+        caught += caughtNow.length;
+        combo += caughtNow.length;
+        maxCombo = Math.max(maxCombo, combo);
+        for (const fish of caughtNow) {
           const add = fish.type.score + Math.min(combo, 8);
-          score += add;
-          floatText(`+${add}`, hookX, hookY);
-          setFeedback(combo >= 3 ? `连钓 ${combo}！小牛今天手感火热` : '哞！钓上来啦');
+          addTotal += add;
           fish.el.remove();
-          fishes = fishes.filter(f => f.id !== fish.id);
-          hookedFishId = null;
         }
+        fishes = fishes.filter(f => !caughtNow.includes(f));
+        hookedFishId = null;
+        score += addTotal;
+        floatText(`+${addTotal} (${caughtNow.length}条)`, hookX, hookY);
+        setFeedback(caughtNow.length > 1 ? `爆护！一次拉上 ${caughtNow.length} 条` : (combo >= 3 ? `连钓 ${combo}！` : '哞！钓上来啦'));
       } else {
         combo = 0;
         setFeedback('空杆了，再来一钩');
@@ -608,7 +620,7 @@
         }
         fish.el.style.left = `${fish.x}px`;
         fish.el.style.top = `${fish.y}px`;
-        fish.el.style.transform = `scaleX(${fish.speed > 0 ? 1 : -1})`;
+        fish.el.style.transform = `scaleX(${fish.speed > 0 ? -1 : 1})`; // 修正朝向
       }
 
       updateHookVisual();
@@ -628,6 +640,8 @@
       hookY = 82;
       targetY = 82;
       hookedFishId = null;
+      castPower = 0;
+      pendingCast = false;
       resultOverlay.classList.remove('show');
       waterArea.innerHTML = '';
       fishes = [];
@@ -668,14 +682,34 @@
       }
     }
 
-    castBtn.addEventListener('click', castHook);
+    function beginCharge() {
+      if (!gameRunning || hookState !== 'idle') return;
+      castChargeStart = performance.now();
+      pendingCast = true;
+      setFeedback('蓄力中…按住越久抛得越远');
+    }
+    function releaseCharge() {
+      if (!pendingCast) return;
+      pendingCast = false;
+      const held = Math.max(0, performance.now() - castChargeStart);
+      const power = Math.min(1, held / 1400);
+      castHook(power);
+    }
+
+    castBtn.addEventListener('pointerdown', beginCharge);
+    castBtn.addEventListener('pointerup', releaseCharge);
+    castBtn.addEventListener('pointercancel', releaseCharge);
+    castBtn.addEventListener('mouseleave', releaseCharge);
     pullBtn.addEventListener('click', pullHook);
     resetBtn.addEventListener('click', startGame);
     restartBtn.addEventListener('click', startGame);
     waterArea.addEventListener('click', () => {
       if (!gameRunning) return;
-      if (hookState === 'idle') castHook();
-      else pullHook();
+      if (hookState === 'idle') {
+        castHook(0.45);
+      } else {
+        pullHook();
+      }
     });
 
 

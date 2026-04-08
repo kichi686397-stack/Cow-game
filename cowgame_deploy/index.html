@@ -525,6 +525,17 @@
   </div>
 </div>
 
+<!-- 接水果游戏弹窗 -->
+<div class="changelog-overlay" id="fruitGameOverlay">
+  <div style="background:#fff;border-radius:24px;box-shadow:0 18px 50px rgba(30,120,60,.25);width:min(700px,95vw);max-height:92vh;overflow:hidden;position:relative;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px 0">
+      <span style="font-weight:bold;font-size:16px;color:#2e7d32">🍎 小牛接水果</span>
+      <button onclick="closeFruitGameOverlay()" style="font-size:20px;background:none;border:none;cursor:pointer;color:#2e7d32;line-height:1">✕</button>
+    </div>
+    <iframe id="fruitGameFrame" src="fruit_game.html" style="width:100%;height:75vh;border:none;border-radius:0 0 24px 24px"></iframe>
+  </div>
+</div>
+
 <div id="tutOverlay">
     <div id="tutCard">
         <div class="tut-icon" id="tutIcon">🐄</div>
@@ -725,6 +736,7 @@ var SPR={
 /* 打工小游戏全局入口（在闭包外暴露） */
 var openFarmGame, closeFarmGame;
 var openFishGameOverlay, closeFishGameOverlay;
+var openFruitGameOverlay, closeFruitGameOverlay;
 
 (function(){
 'use strict';
@@ -783,6 +795,7 @@ var walkDir=1, clickCount=0, clickTimer=null, walkIv=null;
 var feedCount=0, oxLevel=1;
 var thirst=100, isDrinking=false, drinkWalkIv=null;
 var hunger=100, isWorking=false, workTimer=null, workProgress=0;
+var isSick=false, sickRiskSecs=0, sickCareSecs=0, sickNeedSleep=false;
 function updateHungerUI(){
     var pct=Math.round(hunger);
     document.getElementById('hungerFill').style.width=pct+'%';
@@ -793,6 +806,35 @@ function updateHungerUI(){
 }
 function updateWorkUI(){
     document.getElementById('workFill').style.width=Math.round(workProgress)+'%';
+}
+
+function updateSickState(){
+    var icon=document.getElementById('actIcon');
+    if(isSick && icon && !isSleeping){ icon.textContent='🤒'; }
+}
+function triggerSick(){
+    if(isSick) return;
+    isSick=true;
+    sickNeedSleep=true;
+    sickCareSecs=0;
+    mood=Math.max(0,mood-1);
+    setMood();
+    bubble('长期又饿又渴，小牛生病了 🤒\n先喂到60%以上、补水到60%以上，再睡一觉恢复！',3200);
+    updateSickState();
+}
+function tryRecoverSick(){
+    if(!isSick) return;
+    if(hunger>=60 && thirst>=60){
+        sickCareSecs += 5;
+    }else{
+        sickCareSecs=Math.max(0,sickCareSecs-5);
+    }
+    if(sickCareSecs>=30 && !sickNeedSleep){
+        isSick=false;
+        sickRiskSecs=0;
+        bubble('小牛恢复健康啦！注意按时喂食和喝水 💚',2600);
+        updateSickState();
+    }
 }
 function getAppearanceSc(){
     var sel=document.getElementById('appearanceSel');
@@ -3230,6 +3272,7 @@ function happyJump(){
 function sleep(){
     if(isSleeping)return;
     isSleeping=true;A.sleeping=true;setAct('睡觉中','😴');bubble('zzZ...',6000);ST.sleepCount++;ST.sleepChain++;
+    if(isSick && sickNeedSleep){sickNeedSleep=false; bubble('休息中…再保持吃饱喝足就能康复 🛌',1800);} 
     // 走进牛棚
     var W=document.querySelector('.dc').offsetWidth;
     oxCon.style.transition='left 1.2s ease';
@@ -3672,8 +3715,7 @@ function endGame(basket,moveBasket){
     if(gameScore>=5) setTimeout(function(){ submitScore(gameScore,'fruit'); },1000);
 }
 document.getElementById('gameBtn').addEventListener('click',function(){
-    document.getElementById('gameOverlay').classList.toggle('open');
-    document.getElementById('gameStartBest').textContent=gameBest;
+    openFruitGameOverlay();
     skinPanel.classList.remove('open');achPanel.classList.remove('open');
 });
 document.getElementById('gameStartBtn').addEventListener('click',startGame);
@@ -3716,6 +3758,15 @@ setInterval(function(){
     if(!isWorking){hunger=Math.max(0,hunger-4);updateHungerUI();}
     if(hunger<20&&!isSleeping)bubble('好饿哦... 快喂我吃东西 🍎',2000);
 },30000);
+setInterval(function(){
+    if(hunger<=15 && thirst<=15){
+        sickRiskSecs += 5;
+        if(sickRiskSecs >= 60) triggerSick();
+    }else{
+        sickRiskSecs=Math.max(0,sickRiskSecs-5);
+    }
+    tryRecoverSick();
+},5000);
 /* 随机降雨（约10分钟一次机会） */
 setInterval(function(){if(Math.random()<.12&&!isRaining)startRain();},600000);
 setInterval(updateSky,60000);
@@ -3736,6 +3787,10 @@ function saveGame(){
             unlockedAchs:unlockedAchs,
             currentUniverse:currentUniverse,
             gameBest:gameBest,
+            isSick:isSick,
+            sickRiskSecs:sickRiskSecs,
+            sickCareSecs:sickCareSecs,
+            sickNeedSleep:sickNeedSleep,
             ST:{
                 petCount:ST.petCount, walkCount:ST.walkCount, sleepCount:ST.sleepCount,
                 drinkCount:ST.drinkCount, birdCount:ST.birdCount, rainCount:ST.rainCount,
@@ -3774,6 +3829,11 @@ function loadGame(){
         unlockedSkins=data.unlockedSkins||['none'];
         unlockedAchs=data.unlockedAchs||[];
         gameBest=data.gameBest||0;
+        isSick=!!data.isSick;
+        sickRiskSecs=data.sickRiskSecs||0;
+        sickCareSecs=data.sickCareSecs||0;
+        sickNeedSleep=!!data.sickNeedSleep;
+        updateSickState();
         if(data.ST){
             Object.keys(data.ST).forEach(function(k){ ST[k]=data.ST[k]; });
         }
@@ -4668,6 +4728,38 @@ function submitScore(score, game){
     var uniLabel = universeShortLabel(currentUniverse);
     sbUpsert(name, game, score, uniLabel).catch(function(){});
 }
+
+
+/* ═══ 接水果 iframe 弹窗 ═══ */
+openFruitGameOverlay = function(){
+    document.getElementById('fruitGameOverlay').classList.add('open');
+    setTimeout(function(){
+        var frame = document.getElementById('fruitGameFrame');
+        if(frame && frame.contentWindow){
+            frame.contentWindow.postMessage({type:'setUniverse', universe: normalizeUniverseKey(currentUniverse)}, '*');
+        }
+    }, 400);
+};
+closeFruitGameOverlay = function(){
+    document.getElementById('fruitGameOverlay').classList.remove('open');
+};
+window.addEventListener('message', function(e){
+    if(e.data && e.data.type === 'fruitGameComplete'){
+        var xp = Math.max(0, Math.round(e.data.xp || 0));
+        var score = Math.max(0, Math.round(e.data.score || 0));
+        var uni = normalizeUniverseKey(e.data.universe || currentUniverse);
+        feedCount += xp;
+        updateLevel(true); checkSkinUnlock(); showXpGain(xp);
+        bubble('接水果结束！获得 '+xp+' XP 🍎', 2200);
+        if(score > gameBest) gameBest = score;
+        ST.gameMaxScore = Math.max(ST.gameMaxScore||0, score);
+        checkAchievements(); scheduleSave();
+        var name = localStorage.getItem('pixelcow_lbname');
+        if(name && score >= 1){
+            sbUpsert(name, 'fruit', ST.gameMaxScore, universeShortLabel(uni)).catch(function(){});
+        }
+    }
+});
 
 
 /* ═══ 打工小游戏 ═══ */

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>小牛接水果</title>
+  <style>
+    *{box-sizing:border-box} body{margin:0;font-family:'Segoe UI',sans-serif;background:linear-gradient(180deg,#87CEEB,#B2EBF2 55%,#C8E6C9);color:#333}
+    .wrap{width:min(500px,96vw);height:min(640px,94vh);margin:2vh auto;background:rgba(255,255,255,.92);border-radius:24px;overflow:hidden;box-shadow:0 12px 46px rgba(0,0,0,.25);position:relative}
+    .hud{position:absolute;top:0;left:0;right:0;display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;padding:12px 16px;background:rgba(255,255,255,.95);z-index:3;font-weight:bold}
+    .stage{font-size:12px;color:#666}.score{color:#2e7d32}.timer{color:#d32f2f}.combo{color:#ef6c00}
+    .arena{position:absolute;inset:58px 0 0 0;overflow:hidden}
+    .basket{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:40px;pointer-events:none;z-index:2}
+    .item{position:absolute;width:48px;height:48px;display:flex;align-items:center;justify-content:center}
+    .item img{width:44px;height:44px;object-fit:contain;pointer-events:none}
+    .screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;background:rgba(255,255,255,.93);z-index:5;padding:18px}
+    .btn{border:none;border-radius:22px;padding:12px 28px;font-size:16px;font-weight:bold;background:linear-gradient(135deg,#66BB6A,#388E3C);color:#fff;cursor:pointer}
+    .sub{border:none;background:none;color:#999;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="wrap" id="wrap">
+    <div class="hud" id="hud" style="display:none">
+      <span class="score">🎯 <span id="score">0</span></span>
+      <span class="timer" id="timer">30</span>
+      <span class="combo">连击 <span id="combo">x0</span></span>
+      <span class="stage">阶段 <span id="stage">普通</span></span>
+    </div>
+    <div class="arena" id="arena"></div>
+    <div class="screen" id="start">
+      <div style="font-size:56px">🐄</div><h2 style="margin:0">接住食物！</h2>
+      <p style="margin:0;color:#666;line-height:1.7">按住屏幕左右移动篮子，30秒内尽量多接。<br>有害物会扣分并清空连击。</p>
+      <div style="color:#aaa;font-size:13px">历史最佳：<span id="best">0</span></div>
+      <button class="btn" id="startBtn">开始游戏</button>
+    </div>
+    <div class="screen" id="end" style="display:none">
+      <div style="font-size:52px">🐄</div>
+      <h2 style="margin:0">游戏结束</h2>
+      <p style="margin:0">得分：<strong id="finalScore">0</strong></p>
+      <p style="margin:0;color:#888">最高连击：<span id="finalCombo">0</span></p>
+      <button class="btn" id="retryBtn">再来一次</button>
+    </div>
+  </div>
+  <script src="shared/universe-config.js"></script>
+  <script>
+    const SPR={fruit_default_apple:'sprites/fruit_default_apple.png',fruit_default_watermelon:'sprites/fruit_default_watermelon.png',fruit_default_strawberry:'sprites/fruit_default_strawberry.png',fruit_cyber_battery:'sprites/fruit_cyber_battery.png',fruit_cyber_chip:'sprites/fruit_cyber_chip.png',fruit_cyber_apple:'sprites/fruit_cyber_apple.png',fruit_cyber_virus:'sprites/fruit_cyber_virus.png',fruit_ocean_seaweed:'sprites/fruit_ocean_seaweed.png',fruit_ocean_coral:'sprites/fruit_ocean_coral.png',fruit_ocean_clam:'sprites/fruit_ocean_clam.png',fruit_ocean_jellyfish:'sprites/fruit_ocean_jellyfish.png',fruit_space_orb:'sprites/fruit_space_orb.png',fruit_space_egg:'sprites/fruit_space_egg.png',fruit_space_capsule:'sprites/fruit_space_capsule.png',fruit_space_meteor:'sprites/fruit_space_meteor.png',fruit_ancient_berry:'sprites/fruit_ancient_berry.png',fruit_ancient_fern:'sprites/fruit_ancient_fern.png',fruit_ancient_coconut:'sprites/fruit_ancient_coconut.png',fruit_ancient_mushroom:'sprites/fruit_ancient_mushroom.png'};
+    const POOL={normal:[{spr:'fruit_default_apple'},{spr:'fruit_default_watermelon'},{spr:'fruit_default_strawberry'},{spr:'fruit_default_apple'},{spr:'fruit_default_watermelon'}],cyber:[{spr:'fruit_cyber_battery'},{spr:'fruit_cyber_chip'},{spr:'fruit_cyber_apple'},{spr:'fruit_cyber_battery'},{spr:'fruit_cyber_virus',harm:true}],ocean:[{spr:'fruit_ocean_seaweed'},{spr:'fruit_ocean_coral'},{spr:'fruit_ocean_clam'},{spr:'fruit_ocean_seaweed'},{spr:'fruit_ocean_jellyfish',harm:true}],space:[{spr:'fruit_space_orb'},{spr:'fruit_space_egg'},{spr:'fruit_space_capsule'},{spr:'fruit_space_orb'},{spr:'fruit_space_meteor',harm:true}],ancient:[{spr:'fruit_ancient_berry'},{spr:'fruit_ancient_fern'},{spr:'fruit_ancient_coconut'},{spr:'fruit_ancient_berry'},{spr:'fruit_ancient_mushroom',harm:true}]};
+    const wrap=document.getElementById('wrap'),arena=document.getElementById('arena');
+    const scoreEl=document.getElementById('score'),timerEl=document.getElementById('timer'),comboEl=document.getElementById('combo'),stageEl=document.getElementById('stage');
+    let running=false,score=0,timeLeft=30,combo=0,best=0,timer=null,spawnTimer=null,currentUniverse='normal',comboDeadline=0;
+    const basket=document.createElement('div'); basket.className='basket'; basket.textContent='🧺'; arena.appendChild(basket);
+    let bx=50;
+    function moveBasket(clientX){const r=arena.getBoundingClientRect();bx=Math.max(5,Math.min(95,((clientX-r.left)/r.width)*100));basket.style.left=bx+'%';}
+    arena.addEventListener('mousemove',e=>running&&moveBasket(e.clientX));
+    arena.addEventListener('touchmove',e=>{if(!running) return; e.preventDefault(); moveBasket(e.touches[0].clientX);},{passive:false});
+    function stage(){return timeLeft>20?'普通':timeLeft>8?'紧张':'狂热';}
+    function diff(){if(timeLeft>20) return {spawn:850,min:2.4,max:3.1,harm:0}; if(timeLeft>8) return {spawn:680,min:1.8,max:2.4,harm:.08}; return {spawn:480,min:1.1,max:1.7,harm:.16};}
+    function ui(){scoreEl.textContent=String(score);timerEl.textContent=String(timeLeft);comboEl.textContent='x'+combo;stageEl.textContent=stage();}
+    function spawn(){if(!running) return; const d=diff(); const pool=POOL[currentUniverse]||POOL.normal; let fruit=pool[Math.floor(Math.random()*pool.length)]; const harms=pool.filter(x=>x.harm); if(!fruit.harm&&harms.length&&Math.random()<d.harm) fruit=harms[Math.floor(Math.random()*harms.length)];
+      const item=document.createElement('div'); item.className='item'; item.dataset.harm=fruit.harm?'1':'0'; const img=document.createElement('img'); img.src=SPR[fruit.spr]||''; item.appendChild(img); item.style.left=(5+Math.random()*88)+'%'; item.style.top='0px'; arena.appendChild(item);
+      const st=Date.now(),dur=(d.min+Math.random()*(d.max-d.min))*1000;
+      (function fall(){if(!running){item.remove();return;} const y=(Date.now()-st)/dur*(arena.clientHeight-72); item.style.top=y+'px';
+        const ir=item.getBoundingClientRect(), br=basket.getBoundingClientRect(); const overlap=Math.max(0,Math.min(ir.right,br.right)-Math.max(ir.left,br.left));
+        if(ir.bottom>=br.top && overlap>=ir.width*0.35){ if(item.dataset.harm==='1'){score=Math.max(0,score-1);combo=0;} else {combo=(Date.now()<=comboDeadline)?combo+1:1;comboDeadline=Date.now()+1200;score+=1+Math.min(6,Math.floor(combo/3));} ui(); item.remove(); return; }
+        if(y>=arena.clientHeight-16){combo=0; item.remove(); ui(); return;} requestAnimationFrame(fall);
+      })();
+    }
+    function schedule(){ if(!running) return; const d=diff(); spawnTimer=setTimeout(()=>{spawn();schedule();},d.spawn); }
+    function end(){ running=false; clearInterval(timer); clearTimeout(spawnTimer); best=Math.max(best,score); document.getElementById('end').style.display='flex'; document.getElementById('hud').style.display='none'; document.getElementById('finalScore').textContent=String(score); document.getElementById('finalCombo').textContent=String(combo);
+      const xp=Math.max(0,score); if(window.parent&&window.parent!==window){window.parent.postMessage({type:'fruitGameComplete',xp,score,maxCombo:combo,universe:currentUniverse},'*');}
+    }
+    function start(){ arena.querySelectorAll('.item').forEach(e=>e.remove()); running=true; score=0; combo=0; comboDeadline=0; timeLeft=30; ui(); document.getElementById('start').style.display='none'; document.getElementById('end').style.display='none'; document.getElementById('hud').style.display='flex';
+      clearInterval(timer); timer=setInterval(()=>{timeLeft--; if(timeLeft<=0) end(); ui();},1000); schedule(); }
+    document.getElementById('startBtn').addEventListener('click',start); document.getElementById('retryBtn').addEventListener('click',start);
+    window.addEventListener('message',e=>{if(e.data&&e.data.type==='setUniverse'){currentUniverse=(window.COWGAME_UNIVERSE_CONFIG.normalizeUniverseKey(e.data.universe));}});
+  </script>
+</body>
+</html>
