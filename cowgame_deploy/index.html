@@ -197,9 +197,11 @@
         .game-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:800;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
         .game-overlay.open{display:flex}
         .game-wrap{position:relative;width:min(400px,90vw);height:min(500px,72vh);background:linear-gradient(180deg,#87CEEB 0%,#B2EBF2 50%,#C8E6C9 100%);border-radius:24px;overflow:hidden;box-shadow:0 12px 48px rgba(0,0,0,.35)}
-        .game-hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:rgba(255,255,255,.92);z-index:4;font-size:14px;font-weight:bold}
+        .game-hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:rgba(255,255,255,.92);z-index:4;font-size:14px;font-weight:bold;gap:8px;flex-wrap:wrap}
         .game-timer-txt{color:#E53935;font-size:20px}
         .game-score-txt{color:#388E3C;font-size:20px}
+        .game-combo-txt{color:#fb8c00;font-size:18px;min-width:48px;text-align:center;transition:transform .15s,color .15s,filter .15s}
+        .game-combo-txt.warn{color:#e53935;transform:scale(1.12);filter:drop-shadow(0 0 4px rgba(229,57,53,.55))}
         .g-basket{position:absolute;bottom:10px;z-index:4;pointer-events:none;font-size:38px;transform:translateX(-50%);transition:none;filter:drop-shadow(0 3px 6px rgba(0,0,0,.2))}
         .g-miss{position:absolute;font-size:22px;pointer-events:none;z-index:5;animation:gMiss .6s ease-out forwards}
         @keyframes gMiss{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.8) translateY(-20px)}}
@@ -635,6 +637,7 @@
         <div class="game-hud" id="gameHud" style="display:none">
             <span>🎯 <span class="game-score-txt" id="gameScoreTxt">0</span></span>
             <span class="game-timer-txt" id="gameTimerTxt">30</span>
+            <span>连击 <span class="game-combo-txt" id="gameComboTxt">x0</span></span>
             <span style="font-size:12px;color:#5D4037">阶段 <span id="gameStageTxt">普通</span></span>
             <span style="font-size:12px;color:#888">最佳 <span id="gameBestHud">0</span></span>
             <button id="gameExitBtn" style="font-size:12px;padding:4px 10px;border-radius:8px;border:1.5px solid #ddd;background:rgba(255,255,255,.9);cursor:pointer;color:#888">✕ 退出</button>
@@ -652,6 +655,7 @@
             <div class="g-stars" id="gameStars">⭐</div>
             <h2>游戏结束！</h2>
             <p>接住了 <strong id="gameFinalScore" style="font-size:24px;color:#388E3C">0</strong> 个食物</p>
+            <div class="g-best">最高连击: <span id="gameFinalCombo">0</span></div>
             <div class="g-best">历史最佳: <span id="gameEndBest">0</span> 个</div>
             <button class="g-action-btn" id="gameRetryBtn">再来一次</button>
             <button class="g-sub-btn" onclick="document.getElementById('gameOverlay').classList.remove('open')">关闭</button>
@@ -3291,6 +3295,7 @@ document.querySelectorAll('.food-btn').forEach(function(btn){btn.addEventListene
 
 /* ═══ 迷你游戏 ═══ */
 var gameActive=false,gameScore=0,gameBest=0,gameTimerIv=null,gameSpawnIv=null,gameTimeLeft=30;
+var gameCombo=0,comboExpireAt=0,comboBest=0;
 // ── 平行宇宙小游戏物品池 ──
 // item格式: {img:'key', label:'名称', harm:true/false}
 // harm=true 接到扣1分并红色闪烁
@@ -3404,6 +3409,31 @@ var gameWrap=document.getElementById('gameWrap');
 var gameHud=document.getElementById('gameHud');
 var gameStartScr=document.getElementById('gameStartScreen');
 var gameEndScr=document.getElementById('gameEndScreen');
+var gameComboTxt=document.getElementById('gameComboTxt');
+
+function getComboMultiplier(combo){
+    if(combo>=10)return 2;
+    if(combo>=6)return 1.5;
+    if(combo>=3)return 1.2;
+    return 1;
+}
+function updateGameComboHud(){
+    if(!gameComboTxt)return;
+    gameComboTxt.textContent='x'+Math.max(0,gameCombo);
+    var remain=comboExpireAt-Date.now();
+    if(gameCombo>0 && remain<=350){
+        gameComboTxt.classList.add('warn');
+    }else{
+        gameComboTxt.classList.remove('warn');
+    }
+}
+function breakCombo(reason){
+    if(gameCombo<=0){comboExpireAt=0;updateGameComboHud();return;}
+    gameCombo=0;
+    comboExpireAt=0;
+    updateGameComboHud();
+    bubble(reason||'连击中断！',1000);
+}
 
 function getGameDifficulty(gameTimeLeft, gameScore){
     var scoreBoost=Math.min(20,Math.max(0,gameScore));
@@ -3438,12 +3468,14 @@ function getGameStageText(gameTimeLeft){
 
 function startGame(){
     gameScore=0;gameTimeLeft=30;gameActive=true;
+    gameCombo=0;comboExpireAt=0;comboBest=0;
     gameStartScr.style.display='none';gameEndScr.style.display='none';
     gameHud.style.display='flex';
     document.getElementById('gameScoreTxt').textContent='0';
     document.getElementById('gameTimerTxt').textContent='30';
     document.getElementById('gameStageTxt').textContent=getGameStageText(gameTimeLeft);
     document.getElementById('gameBestHud').textContent=gameBest;
+    updateGameComboHud();
     gameWrap.querySelectorAll('.g-item,.g-basket,.g-miss').forEach(function(el){el.remove();});
 
     /* 篮子 */
@@ -3470,6 +3502,11 @@ function startGame(){
         document.getElementById('gameTimerTxt').textContent=gameTimeLeft;
         document.getElementById('gameStageTxt').textContent=getGameStageText(gameTimeLeft);
         if(gameTimeLeft<=5) document.getElementById('gameTimerTxt').style.color='#E53935';
+        if(gameCombo>0 && Date.now()>comboExpireAt){
+            breakCombo('慢了一拍，连击断了！');
+        }else{
+            updateGameComboHud();
+        }
         if(gameTimeLeft<=0)endGame(basket,moveBasket);
     },1000);
 
@@ -3533,6 +3570,7 @@ function startGame(){
                     if(fruitDef.harm){
                         // 有害！扣分
                         gameScore=Math.max(0,gameScore-1);
+                        breakCombo('接到有害物，连击清零！');
                         document.getElementById('gameScoreTxt').textContent=gameScore;
                         var hit=document.createElement('div');
                         hit.style.cssText='position:absolute;font-size:22px;font-weight:bold;color:#ff3333;pointer-events:none;z-index:5;left:'+bx+'%;bottom:55px;transform:translateX(-50%);animation:gCatch .5s ease-out forwards';
@@ -3544,18 +3582,31 @@ function startGame(){
                         gameWrap.appendChild(flash);
                         setTimeout(function(){hit.remove();if(flash.parentNode)flash.remove();},500);
                     } else {
-                        gameScore++;
+                        var now=Date.now();
+                        if(now<=comboExpireAt){
+                            gameCombo+=1;
+                        }else{
+                            gameCombo=1;
+                        }
+                        comboExpireAt=now+1200;
+                        comboBest=Math.max(comboBest,gameCombo);
+                        var baseScore=1;
+                        var comboMultiplier=getComboMultiplier(gameCombo);
+                        var add=Math.max(1,Math.round(baseScore*comboMultiplier*10)/10);
+                        gameScore+=add;
                         document.getElementById('gameScoreTxt').textContent=gameScore;
                         feedCount+=1;updateLevel(true);checkSkinUnlock();
                         var hit=document.createElement('div');
                         hit.style.cssText='position:absolute;font-size:20px;pointer-events:none;z-index:5;left:'+bx+'%;bottom:55px;transform:translateX(-50%);animation:gCatch .35s ease-out forwards';
-                        hit.textContent='⭐';
+                        hit.textContent='+'+add+' x'+comboMultiplier.toFixed(1)+' 🔥';
                         gameWrap.appendChild(hit);
                         setTimeout(function(){hit.remove();},400);
+                        updateGameComboHud();
                     }
                     item.remove();
                     return;
                 } else if(y>=gameWrap.offsetHeight-52){
+                    breakCombo('漏接了！连击中断');
                     var miss=document.createElement('div');
                     miss.className='g-miss';
                     miss.textContent='💨';
@@ -3568,6 +3619,11 @@ function startGame(){
                 }
             }
             if(y>gameWrap.offsetHeight){item.remove();return;}
+            if(gameCombo>0 && Date.now()>comboExpireAt){
+                breakCombo('慢了一拍，连击断了！');
+            }else{
+                updateGameComboHud();
+            }
             requestAnimationFrame(fallStep);
         })();
     }
@@ -3600,6 +3656,7 @@ function endGame(basket,moveBasket){
     var stars=gameScore>=20?'⭐⭐⭐':gameScore>=10?'⭐⭐':gameScore>=5?'⭐':'';
     document.getElementById('gameStars').textContent=stars||'💨';
     document.getElementById('gameFinalScore').textContent=gameScore;
+    document.getElementById('gameFinalCombo').textContent=comboBest;
     document.getElementById('gameEndBest').textContent=gameBest;
     document.getElementById('gameEndCow').textContent=gameScore>=20?'🐄✨':gameScore>=10?'🐄':gameScore>=5?'🐄':gameScore===0?'😢':'🐄';
     gameEndScr.style.display='flex';
