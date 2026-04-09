@@ -848,6 +848,7 @@ var ST={
     petCount:0, walkCount:0, sleepCount:0, drinkCount:0,
     birdCount:0, rainCount:0, gameMaxScore:0, fruitFed:0,
     catCount:0, rabbitCount:0, butterflyCount:0, visitorTotal:0,
+    frogCount:0, catInteract:0,
     universeVisited:{}, universeCount:0,
     veggFed:0,          // 纯素食物（草/蔬菜/干草/胡萝卜/玉米）
     junkStreak:0,       // 连续喂怪东西（骨头/肉/披萨）次数
@@ -943,6 +944,9 @@ var SKINS=[
     // 成就解锁
     {id:'medal',   name:'钓鱼勋章',icon:'🎖️', type:'ach',  achId:'a45', hint:'成就「钓鱼达人」解锁'},
     {id:'chef',    name:'厨师帽',  icon:'👨‍🍳', type:'ach',  achId:'a22', hint:'成就「美食家」解锁'},
+    {id:'bowtie',  name:'蝴蝶结',  icon:'🎀', type:'ach',  achId:'a53', hint:'成就「猫咪翻译官」解锁'},
+    {id:'necklace',name:'蛙鸣项圈',icon:'📿', type:'ach',  achId:'a54', hint:'成就「两栖友人」解锁'},
+    {id:'leaf',    name:'幸运叶',  icon:'🍀', type:'ach',  achId:'a55', hint:'成就「天天热闹」解锁'},
     // 钓鱼掉落
     {id:'crown',   name:'王冠',    icon:'👑', type:'drop', hint:'传说：钓鱼时偶尔会钓上来...'},
     /* [EXTEND_SKINS] ← 新装备数据粘贴到这行上面 */
@@ -1073,6 +1077,9 @@ var ACHS=[
     {id:'a50',icon:'💧',name:'水分充足',    desc:'下雨时恢复口渴到满',            stat:'_rainFull',       target:1,  hidden:true},
     {id:'a51',icon:'🏅',name:'初登榜单',    desc:'第一次上传排行榜数据',           stat:'lbUploaded',      target:1,  hidden:false},
     {id:'a52',icon:'👑',name:'真正的王',    desc:'???',                           stat:'_trueKing',       target:1,  hidden:true},
+    {id:'a53',icon:'🐾',name:'猫咪翻译官',  desc:'和猫咪互动 5 次',                stat:'catInteract',     target:5,  hidden:false},
+    {id:'a54',icon:'🐸',name:'两栖友人',    desc:'青蛙来访 3 次',                  stat:'frogCount',       target:3,  hidden:false},
+    {id:'a55',icon:'🗓️',name:'天天热闹',    desc:'累计访客总数达到 6 次',           stat:'visitorTotal',    target:6,  hidden:true},
 ];
 var unlockedAchs=[];
 function getStatVal(stat){
@@ -1100,6 +1107,8 @@ function getStatVal(stat){
     if(stat==='boredCount')return ST.boredCount||0;
     if(stat==='spinCount')return ST.spinCount||0;
     if(stat==='kickCount')return ST.kickCount||0;
+    if(stat==='catInteract')return ST.catInteract||0;
+    if(stat==='frogCount')return ST.frogCount||0;
     if(stat==='fishSceneVisit')return ST.fishSceneVisit||0;
     if(stat==='fishSceneSec')return ST.fishSceneSec||0;
     if(stat==='_pufferCaught')return ST._pufferCaught||0;
@@ -1373,6 +1382,27 @@ function drawChefHat(hy){
         ctx.beginPath();ctx.moveTo(cx+i*6,top+18);ctx.quadraticCurveTo(cx+i*8,top+10,cx+i*5,top-4);ctx.stroke();
     }
 }
+function drawBowtie(hy){
+    var cx=24,cy=hy+49;
+    ctx.fillStyle='#ff4f8f';
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx-15,cy-9);ctx.lineTo(cx-15,cy+9);ctx.closePath();ctx.fill();
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+15,cy-9);ctx.lineTo(cx+15,cy+9);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#ffd1e4';ctx.beginPath();ctx.arc(cx,cy,4.5,0,Math.PI*2);ctx.fill();
+}
+function drawNecklace(hy){
+    ctx.strokeStyle='#5cb85c';ctx.lineWidth=3;
+    ctx.beginPath();ctx.arc(29,hy+46,16,.2,Math.PI-.2);ctx.stroke();
+    ctx.fillStyle='#7a4a22';ctx.beginPath();ctx.arc(29,hy+60,3.3,0,Math.PI*2);ctx.fill();
+}
+function drawLuckyLeaf(hy){
+    var x=10,y=hy+12;
+    ctx.fillStyle='#52b788';
+    [[0,0],[-4,3],[4,3],[0,7]].forEach(function(p){
+        ctx.beginPath();ctx.ellipse(x+p[0],y+p[1],4.2,3.1,0,0,Math.PI*2);ctx.fill();
+    });
+    ctx.strokeStyle='#2d6a4f';ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.moveTo(x,y+7);ctx.lineTo(x+3,y+13);ctx.stroke();
+}
 
 // ══════════════════════════════════════════════════
 // 装备注册表 & 模块化注册函数
@@ -1405,6 +1435,9 @@ var SKIN_DRAW_FNS={
     shell:   drawShellCrown,
     medal:   drawMedalChest,
     chef:    drawChefHat,
+    bowtie:  drawBowtie,
+    necklace:drawNecklace,
+    leaf:    drawLuckyLeaf,
 };
 
 // registerSkin: 同时注册数据 + 绘制函数
@@ -2001,18 +2034,22 @@ document.getElementById('rainBtn').addEventListener('click',function(){
 
 /* ═══ 小鸟访客 ═══ */
 var BIRD={state:'hidden',x:0,y:0,offX:60,hopT:0,leaveT:null,wingA:0,wingD:1};
+function getCowVisualRect(){
+    return canvas.getBoundingClientRect();
+}
 function spawnBird(){
     if(BIRD.state!=='hidden'||isSleeping||isRaining)return;
     BIRD.state='flying-in';BIRD.x=-60;
-    var r=oxCon.getBoundingClientRect();
-    // 停在牛背上（canvas高165，背部约在40%处）
-    BIRD.y=r.top+r.height*0.38;BIRD.offX=55+Math.random()*25;
+    var r=getCowVisualRect();
+    // 停在牛背上（使用真实渲染尺寸，升级放大后也能准确落点）
+    BIRD.y=r.top+r.height*0.43;
+    BIRD.offX=r.width*(0.42+Math.random()*0.22);
 }
 function updateBird(){
     if(BIRD.state==='hidden'){birdCvs.style.display='none';return;}
     birdCvs.style.display='block';
-    var r=oxCon.getBoundingClientRect();
-    var backY=r.top+r.height*0.38; // 背部位置，跟随牛的实际渲染高度
+    var r=getCowVisualRect();
+    var backY=r.top+r.height*0.43; // 背部位置，跟随牛真实渲染高度
     var tx=r.left+BIRD.offX,ty=backY;
     if(BIRD.state==='flying-in'){
         BIRD.x+=(tx-BIRD.x)*.07;BIRD.y+=(ty-BIRD.y)*.07;
@@ -2024,7 +2061,11 @@ function updateBird(){
         }
     } else if(BIRD.state==='perching'){
         BIRD.y=backY;BIRD.x=r.left+BIRD.offX;BIRD.hopT++;
-        if(BIRD.hopT>200&&Math.random()<.015){BIRD.offX+=(Math.random()-.5)*24;BIRD.offX=Math.max(25,Math.min(120,BIRD.offX));BIRD.hopT=0;}
+        if(BIRD.hopT>200&&Math.random()<.015){
+            BIRD.offX+=(Math.random()-.5)*24;
+            BIRD.offX=Math.max(r.width*0.3,Math.min(r.width*0.75,BIRD.offX));
+            BIRD.hopT=0;
+        }
     } else if(BIRD.state==='flying-away'){
         BIRD.x+=9;BIRD.y-=4;if(BIRD.x>window.innerWidth+80)BIRD.state='hidden';
     }
@@ -2064,7 +2105,7 @@ var rabCvs=document.getElementById('rabbitCanvas'),rabCtx=rabCvs.getContext('2d'
 var butCvs=document.getElementById('butterflyCanvas'),butCtx=butCvs.getContext('2d');
 
 /* ── 猫咪 🐱 ── */
-var CAT={state:'hidden',x:0,dir:1,targetX:0,phase:0,sitT:null};
+var CAT={state:'hidden',x:0,dir:1,targetX:0,phase:0,sitT:null,action:'idle',actionEnd:0,interactCount:0};
 
 function spawnCat(){
     if(CAT.state!=='hidden'||RAB.state!=='hidden'||isSleeping||isRaining)return;
@@ -2083,9 +2124,9 @@ function updateCat(){
     catCvs.style.transform='none';
     // canvas 180px 宽，视觉中心在 x=90，用 canvas 内部翻转，无 CSS scaleX 跳位
     catCvs.style.left=(CAT.x-90)+'px';
-    CAT.phase+=0.06;
+    CAT.phase+=0.045;
     if(CAT.state==='walking-in'){
-        CAT.x+=(CAT.targetX-CAT.x)*.07;
+        CAT.x+=(CAT.targetX-CAT.x)*.045;
         if(Math.abs(CAT.x-CAT.targetX)<10){
             CAT.state='sitting';
             bubble('哞? 猫咪来拜访啦！😸',2200);
@@ -2098,15 +2139,18 @@ function updateCat(){
         CAT.x=CAT.targetX+Math.sin(CAT.phase*.5)*1.5;
     } else if(CAT.state==='walking-out'){
         var ex=CAT.dir>0?window.innerWidth+200:-200;
-        CAT.x+=(ex-CAT.x)*.05;
+        CAT.x+=(ex-CAT.x)*.04;
         if(Math.abs(CAT.x-ex)<20)CAT.state='hidden';
     }
+    if(CAT.action!=='idle'&&Date.now()>CAT.actionEnd) CAT.action='idle';
     drawCat(CAT.state==='sitting');
 }
 
 function drawCat(sitting){
     var cc=catCtx; cc.clearRect(0,0,180,95);
     var ph=CAT.phase;
+    var isWave=CAT.action==='wave';
+    var isRoll=CAT.action==='roll';
 
     // ── 宇宙外观配色 ──
     var CP={
@@ -2205,9 +2249,9 @@ function drawCat(sitting){
         });
     } else {
         // 坐姿：头部 hx2=30 和行走姿保持一致，切换时不瞬移
-        var hy2=42;
+        var hy2=42+(isWave?Math.sin(ph*8)*1.3:0);
         var hx2=30;
-        var bx2=52, by2=66;
+        var bx2=52, by2=66+(isRoll?Math.sin(ph*6)*1.2:0);
         // 身体圆
         cc.fillStyle=CP.body;
         cc.beginPath(); cc.ellipse(bx2,by2,24,20,0,0,Math.PI*2); cc.fill();
@@ -2259,7 +2303,15 @@ function drawCat(sitting){
         // 前爪
         cc.fillStyle=CP.paw;
         cc.beginPath(); cc.ellipse(bx2-6,by2+15,11,5,0,0,Math.PI*2); cc.fill();
-        cc.beginPath(); cc.ellipse(bx2+10,by2+15,11,5,0,0,Math.PI*2); cc.fill();
+        if(isWave){
+            cc.save();
+            cc.translate(bx2+10,by2+13);
+            cc.rotate(-0.45+Math.sin(ph*10)*0.32);
+            cc.beginPath(); cc.ellipse(0,0,11,5,0,0,Math.PI*2); cc.fill();
+            cc.restore();
+        }else{
+            cc.beginPath(); cc.ellipse(bx2+10,by2+15,11,5,0,0,Math.PI*2); cc.fill();
+        }
         // 卷尾巴
         cc.strokeStyle=CP.tail; cc.lineWidth=8; cc.lineCap='round';
         cc.beginPath(); cc.moveTo(bx2+26,by2+8); cc.bezierCurveTo(bx2+52,by2-4,bx2+56,by2-24,bx2+42,by2-30); cc.stroke();
@@ -2272,8 +2324,23 @@ function drawCat(sitting){
 
 catCvs.addEventListener('click',function(){
     if(CAT.state==='sitting'){
-        clearTimeout(CAT.sitT);CAT.state='walking-out';CAT.dir=-CAT.dir;
-        bubble('猫咪被吓跑了~',1500);
+        CAT.interactCount=(CAT.interactCount||0)+1;
+        ST.catInteract=(ST.catInteract||0)+1;
+        mood=Math.min(5,mood+1);setMood();
+        if(Math.random()<0.5){
+            CAT.action='wave';
+            bubble('猫咪举爪打招呼～🐾',1600);
+        }else{
+            CAT.action='roll';
+            bubble('猫咪打了个滚，好可爱！😻',1600);
+        }
+        CAT.actionEnd=Date.now()+2200;
+        checkAchievements();
+        if(CAT.interactCount>=3){
+            CAT.interactCount=0;
+            clearTimeout(CAT.sitT);CAT.state='walking-out';CAT.dir=-CAT.dir;
+            bubble('猫咪玩够了，溜走啦~',1500);
+        }
     }
 });
 
@@ -2402,9 +2469,9 @@ function spawnButterfly(){
     BUT.dir=Math.random()>.5?1:-1;
     BUT.x=BUT.dir>0?-80:window.innerWidth+80;
     BUT.y=window.innerHeight*.25+Math.random()*120;
-    var r=oxCon.getBoundingClientRect();var s=getAppearanceSc();
-    // 停在牛角上（头顶偏左，约15%高处）
-    BUT._tx=r.left+r.width*0.28;BUT._ty=r.top+r.height*0.12;
+    var r=getCowVisualRect();
+    // 停在牛角上（使用真实渲染尺寸，升级体型后依旧准确）
+    BUT._tx=r.left+r.width*0.25;BUT._ty=r.top+r.height*0.18;
     BUT.state='flying-in';BUT.phase=0;BUT.flapT=0;
 }
 
@@ -2426,8 +2493,8 @@ function updateButterfly(){
             BUT.leaveT=setTimeout(function(){BUT.state='flying-out';},9000+Math.random()*9000);
         }
     } else if(BUT.state==='resting'){
-        var r=oxCon.getBoundingClientRect();var s=getAppearanceSc();
-        BUT.x=r.left+25*s+10;BUT.y=r.top+22*s+Math.sin(BUT.phase)*1.5;
+        var r=getCowVisualRect();
+        BUT.x=r.left+r.width*0.25;BUT.y=r.top+r.height*0.18+Math.sin(BUT.phase)*1.5;
     } else if(BUT.state==='flying-out'){
         BUT.x+=BUT.dir*7;BUT.y-=3.5;BUT.y+=Math.sin(BUT.phase*3)*2;
         if(BUT.x<-80||BUT.x>window.innerWidth+80)BUT.state='hidden';
@@ -2449,6 +2516,11 @@ function drawButterfly(resting){
     var bc=butCtx;bc.clearRect(0,0,80,55);
     var cx=40,cy=30;
     var fa=Math.sin(BUT.flapT)*(resting?.28:.72);
+    var sizeK=0.72; // 比小鸟稍小
+    bc.save();
+    bc.translate(cx,cy);
+    bc.scale(sizeK,sizeK);
+    bc.translate(-cx,-cy);
 
     // 宇宙配色覆盖 BUT_COL
     var BC=BUT_COL;
@@ -2492,6 +2564,7 @@ function drawButterfly(resting){
     bc.fillStyle='#333';
     bc.beginPath();bc.arc(cx-12,cy-26,2.2,0,Math.PI*2);bc.fill();
     bc.beginPath();bc.arc(cx+12,cy-26,2.2,0,Math.PI*2);bc.fill();
+    bc.restore();
 }
 
 butCvs.addEventListener('click',function(){
@@ -3797,6 +3870,7 @@ function saveGame(){
                 gameMaxScore:ST.gameMaxScore, fruitFed:ST.fruitFed,
                 catCount:ST.catCount, rabbitCount:ST.rabbitCount,
                 butterflyCount:ST.butterflyCount, visitorTotal:ST.visitorTotal,
+                frogCount:ST.frogCount||0, catInteract:ST.catInteract||0,
                 universeVisited:ST.universeVisited, universeCount:ST.universeCount,
                 veggFed:ST.veggFed, junkStreak:ST.junkStreak,
                 allFoodSeen:ST.allFoodSeen, universeFeeds:ST.universeFeeds,
