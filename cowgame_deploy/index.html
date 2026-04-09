@@ -1,28 +1,4 @@
 <!DOCTYPE html>
-<!--
-  🐄 小牛像素桌宠 项目规则（给 AI 助手看的）
-  ═══════════════════════════════════════════
-  当前版本：v9.0.1
-  主文件：小牛像素桌宠_v8.html
-  日志文件：小牛像素桌宠_版本日志.md
-
-  每次改动必须做到：
-  1. 更新 <title> 标签里的版本号
-  2. 在游戏内 changelog overlay HTML 里写新版本条目（输入"主包你辛苦了"可看到）
-  3. 在 小牛像素桌宠_版本日志.md 里同步更新对应版本条目
-  4. 版本号遵循语义化版本规范（SemVer）：
-     - Major：新增独立核心系统 / 架构级重构
-     - Minor：向下兼容的新功能
-     - Patch：Bug 修复 / 小改动
-
-  技术备忘：
-  - 整头牛用 Canvas 绘制（#oxCanvas 175×165），RAF 动画循环
-  - 方向翻转：canvas 内部 translate(W,0)+scale(-1,1)，禁止用 CSS scaleX（会瞬移）
-  - 访客动物（猫/兔/蝴蝶）方向同上，绝不用 CSS transform 翻转
-  - 每次改动绘制函数后必须用 node --check 验证语法，防止残留代码悬挂
-  - 存档用 localStorage，key = pixelcow_save_v1
-  ═══════════════════════════════════════════
--->
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -409,10 +385,10 @@
     </div>
 </div>
 
-<!-- 版本更新弹窗 -->
+<!-- 更新弹窗 -->
 <div class="popup-box" id="newVerPopup" style="padding:28px 36px;min-width:260px;max-width:360px">
     <div style="font-size:40px;margin-bottom:8px" id="newVerEmoji">📢</div>
-    <div style="font-weight:bold;font-size:18px;margin-bottom:4px" id="newVerTitle">版本更新公告</div>
+    <div style="font-weight:bold;font-size:18px;margin-bottom:4px" id="newVerTitle">更新公告</div>
     <div style="font-size:13px;color:#888;margin-bottom:10px" id="newVerLabel"></div>
     <div id="newVerWarning" style="font-size:13px;color:#555;line-height:1.8;margin-bottom:6px;background:#fff8e1;border-radius:10px;padding:10px 12px;border-left:3px solid #ffc107;display:none"></div>
     <div id="newVerContent" style="font-size:13px;color:#555;line-height:1.8;margin-bottom:18px"></div>
@@ -422,7 +398,7 @@
 <!-- 更新日志弹窗 -->
 <div class="changelog-overlay" id="changelogOverlay">
   <div class="changelog-box">
-    <h2>📋 小牛桌宠 版本日志</h2>
+    <h2>📋 小牛桌宠 日志</h2>
     <div id="changelogContent"></div>
     <button class="changelog-close" onclick="document.getElementById('changelogOverlay').classList.remove('open')">知道了，感谢主包！🎉</button>
   </div>
@@ -3986,24 +3962,37 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '10.3.1';
+var CURRENT_VER = '10.3.2';
 
 var VER_POPUP = {
-    emoji:   '🎣',
-    title:   '小游戏大升级 + 生病系统',
-    okBtn:   '知道了，去玩！🐄',
+    emoji:   '🐱',
+    title:   '互动升级 + 动物优化',
+    okBtn:   '好耶，去看看！✨',
     warning: '',
     items: [
-        '🍎 接水果游戏独立成单独页面，体验更流畅',
-        '🎣 钓鱼升级：蓄力抛竿 + 范围收杆，可一次钓多条',
-        '🤒 新增生病系统：长期忽视口渴和饥饿会让小牛生病',
-        '🐟 修复鱼类倒着游的问题',
-        '📊 接水果分数修复为整数，排行榜更新正常',
+        '🐱 小猫可互动：点击触发举爪/打滚',
+        '🦋 修复蝴蝶过大问题，体型更自然',
+        '🐦 修复小鸟/蝴蝶落点错误',
+        '🎯 小猫移动节奏优化，更丝滑',
+        '🎁 新增成就与装扮内容',
     ]
 };
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
+{
+        ver: 'v10.3.2', title: '互动优化 + 动物表现升级',
+        items: [
+            '🐦 修复小牛升级后小鸟/蝴蝶落点错误：改为基于 oxCanvas.getBoundingClientRect() 的真实渲染尺寸计算停靠点，避免放大后无法正确停靠',
+            '🐱 调整小猫移动节奏：降低进场与离场插值速度与相位速度，整体观感更自然流畅',
+            '🐱 新增小猫互动动作：点击坐姿猫咪可触发“举爪/打滚”动作，并伴随气泡文案，累计互动后猫咪会离场',
+            '🦋 修复蝴蝶体型偏大问题：整体缩放为 0.72，确保明显小于小鸟',
+            '🏆 扩展成就系统：新增 a53「猫咪翻译官」、a54「两栖友人」、a55「天天热闹」',
+            '🎀 新增装扮内容：bowtie（蝴蝶结）、necklace（蛙鸣项圈）、leaf（幸运叶），并补充对应绘制函数与解锁条件',
+            '💾 存档字段扩展：新增 frogCount 与 catInteract 的保存',
+        ]
+},
+
 {
         ver: 'v10.3.1', title: '小游戏独立 + 钓鱼升级 + 生病系统',
         items: [
