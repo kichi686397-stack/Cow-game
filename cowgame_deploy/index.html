@@ -707,6 +707,7 @@ var SPR={
   fruit_ancient_fern:"sprites/fruit_ancient_fern.png",
   fruit_ancient_coconut:"sprites/fruit_ancient_coconut.png",
   fruit_ancient_mushroom:"sprites/fruit_ancient_mushroom.png",
+  rabbit_sprite_sheet:"sprites/rabbit_sprite_sheet.png",
 };
 
 /* 打工小游戏全局入口（在闭包外暴露） */
@@ -2321,7 +2322,58 @@ catCvs.addEventListener('click',function(){
 });
 
 /* ── 兔子 🐇 ── */
-var RAB={state:'hidden',x:0,dir:1,targetX:0,phase:0,hopY:0,stayT:null};
+var RABBIT_SPRITE={
+    key:'rabbit_sprite_sheet',
+    frameW:96,frameH:96,
+    columns:8,
+    displayH:120,
+    fallbackCanvas:{w:90,h:130},
+    actions:{
+        walk:[32,33,34,35,36,37],
+        run:[0,1,2,3,4,5],
+        idle:[8,9,10,11],
+        sit:[16,17],
+        carry:[24,25,26]
+    }
+};
+var RAB={state:'hidden',x:0,dir:1,targetX:0,phase:0,hopY:0,stayT:null,animName:'idle',animFrame:0,animTick:0,animSpeed:8,facing:1,renderW:90,renderH:120};
+
+function ensureRabbitCanvasSize(useSheet){
+    var ratio=useSheet?(RABBIT_SPRITE.frameW/RABBIT_SPRITE.frameH):(RABBIT_SPRITE.fallbackCanvas.w/RABBIT_SPRITE.fallbackCanvas.h);
+    var drawH=RABBIT_SPRITE.displayH;
+    var drawW=Math.round(drawH*ratio);
+    drawW=Math.max(RABBIT_SPRITE.fallbackCanvas.w,Math.min(140,drawW));
+    var cvsW=drawW;
+    var cvsH=Math.max(RABBIT_SPRITE.fallbackCanvas.h,drawH);
+    if(rabCvs.width!==cvsW||rabCvs.height!==cvsH){
+        rabCvs.width=cvsW;
+        rabCvs.height=cvsH;
+    }
+    RAB.renderW=drawW;
+    RAB.renderH=drawH;
+}
+
+function setRabbitAnim(name, forceReset){
+    var action=RABBIT_SPRITE.actions[name]||RABBIT_SPRITE.actions.idle;
+    var speedMap={run:4,walk:7,idle:10,sit:14,carry:8};
+    if(forceReset||RAB.animName!==name){
+        RAB.animName=name;
+        RAB.animFrame=0;
+        RAB.animTick=0;
+    }
+    RAB.animSpeed=speedMap[name]||8;
+    if(RAB.animFrame>=action.length)RAB.animFrame=0;
+}
+
+function stepRabbitAnim(){
+    var action=RABBIT_SPRITE.actions[RAB.animName]||RABBIT_SPRITE.actions.idle;
+    if(action.length<=1)return;
+    RAB.animTick++;
+    if(RAB.animTick>=RAB.animSpeed){
+        RAB.animTick=0;
+        RAB.animFrame=(RAB.animFrame+1)%action.length;
+    }
+}
 
 function spawnRabbit(){
     if(RAB.state!=='hidden'||CAT.state!=='hidden'||isSleeping||isRaining)return;
@@ -2332,6 +2384,8 @@ function spawnRabbit(){
     RAB.targetX=RAB.dir>0?r.left-65:r.left+r.width+20;
     RAB.targetX=Math.max(45,Math.min(W-90,RAB.targetX));
     RAB.state='hopping-in';RAB.phase=0;RAB.hopY=0;
+    RAB.facing=RAB.dir;
+    setRabbitAnim('run',true);
 }
 
 function updateRabbit(){
@@ -2341,19 +2395,27 @@ function updateRabbit(){
     var hopping=RAB.state==='hopping-in'||RAB.state==='hopping-out';
     RAB.hopY=hopping?Math.max(0,-Math.sin(RAB.phase*3)*24):0;
     rabCvs.style.bottom=(120-RAB.hopY)+'px';
-    rabCvs.style.left=(RAB.x-45)+'px';
+    RAB.facing=RAB.dir;
+    if(hopping){
+        setRabbitAnim('run');
+    }else if(RAB.state==='sniffing'){
+        setRabbitAnim('idle');
+    }
+    stepRabbitAnim();
+    rabCvs.style.left=(RAB.x-rabCvs.width/2)+'px';
     rabCvs.style.transform='none';
     if(RAB.state==='hopping-in'){
         RAB.x+=(RAB.targetX-RAB.x)*.065;
         if(Math.abs(RAB.x-RAB.targetX)<12){
             RAB.state='sniffing';
+            setRabbitAnim('idle',true);
             bubble('哞? 小兔子！快来！🥕',2200);
             mood=Math.min(5,mood+1);setMood();
             ST.rabbitCount++;ST.visitorTotal++;ST.todayRabbit=true;checkAchievements();
             RAB.stayT=setTimeout(function(){
                 bubble('哞！兔子偷我胡萝卜！',2000);
                 spawnP('star',RAB.x+40,window.innerHeight-160);
-                setTimeout(function(){RAB.state='hopping-out';RAB.dir=-RAB.dir;},2500);
+                setTimeout(function(){RAB.state='hopping-out';RAB.dir=-RAB.dir;setRabbitAnim('run',true);},2500);
             },10000+Math.random()*8000);
         }
     } else if(RAB.state==='sniffing'){
@@ -2361,13 +2423,42 @@ function updateRabbit(){
     } else if(RAB.state==='hopping-out'){
         var ex=RAB.dir>0?window.innerWidth+100:-100;
         RAB.x+=(ex-RAB.x)*.06;
-        if(Math.abs(RAB.x-ex)<15)RAB.state='hidden';
+        if(Math.abs(RAB.x-ex)<15){
+            RAB.state='hidden';
+            setRabbitAnim('idle',true);
+        }
     }
-    drawRabbit(RAB.state==='sniffing');
+    drawRabbitSprite();
 }
 
-function drawRabbit(sniffing){
-    var rc=rabCtx; rc.clearRect(0,0,90,130);
+function drawRabbitSprite(){
+    var rc=rabCtx;
+    var sheet=getSpriteImg(RABBIT_SPRITE.key);
+    var ready=!!(sheet&&sheet.complete&&sheet.naturalWidth>0);
+    ensureRabbitCanvasSize(ready);
+    rc.clearRect(0,0,rabCvs.width,rabCvs.height);
+    if(!ready){
+        drawRabbitLegacy(RAB.state==='sniffing');
+        return;
+    }
+    var frames=RABBIT_SPRITE.actions[RAB.animName]||RABBIT_SPRITE.actions.idle;
+    var frameIndex=frames[Math.min(RAB.animFrame,frames.length-1)]||0;
+    var sx=(frameIndex%RABBIT_SPRITE.columns)*RABBIT_SPRITE.frameW;
+    var sy=Math.floor(frameIndex/RABBIT_SPRITE.columns)*RABBIT_SPRITE.frameH;
+    var dw=RAB.renderW,dh=RAB.renderH;
+    var dx=(rabCvs.width-dw)/2,dy=rabCvs.height-dh;
+    rc.save();
+    if(RAB.facing<0){
+        rc.translate(rabCvs.width,0);
+        rc.scale(-1,1);
+        dx=rabCvs.width-dx-dw;
+    }
+    rc.drawImage(sheet,sx,sy,RABBIT_SPRITE.frameW,RABBIT_SPRITE.frameH,dx,dy,dw,dh);
+    rc.restore();
+}
+
+function drawRabbitLegacy(sniffing){
+    var rc=rabCtx; rc.clearRect(0,0,rabCvs.width,rabCvs.height);
     var ph=RAB.phase;
     var RP={body:'#E8E8E8',belly:'#F5F5F5',earIn:'#FFAEC0',eye:'#C2185B',nose:'#FF69B4',paw:'#D4D4D4',tail:'#fff',tailSh:'#F0F0F0'};
     switch(currentUniverse){
@@ -2378,7 +2469,7 @@ function drawRabbit(sniffing){
     }
     var facingLeft=RAB.dir<0;
     rc.save();
-    if(facingLeft){ rc.translate(90,0); rc.scale(-1,1); }
+    if(facingLeft){ rc.translate(rabCvs.width,0); rc.scale(-1,1); }
     var earSway=sniffing?Math.sin(ph*2)*.1:.04;
     var cx=45, cy=75;
     rc.fillStyle=RP.body;
@@ -2433,6 +2524,7 @@ function drawRabbit(sniffing){
 rabCvs.addEventListener('click',function(){
     if(RAB.state==='sniffing'){
         clearTimeout(RAB.stayT);RAB.state='hopping-out';RAB.dir=-RAB.dir;
+        setRabbitAnim('run',true);
         bubble('哞！兔子跑走了！',1500);
     }
 });
