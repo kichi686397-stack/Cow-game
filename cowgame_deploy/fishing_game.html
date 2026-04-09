@@ -63,9 +63,7 @@
       font-weight: 800;
     }
     .main {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 16px;
+      display: block;
     }
     .pond-wrap {
       position: relative;
@@ -151,6 +149,7 @@
       position: absolute;
       inset: 132px 0 0 0;
       overflow: hidden;
+      touch-action: none;
     }
     .water-area::before {
       content: "";
@@ -208,11 +207,6 @@
       15% { opacity: 1; }
       100% { transform: translateY(-40px) scale(1.08); opacity: 0; }
     }
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
     .panel {
       background: rgba(255,255,255,0.74);
       border: 2px solid #9fd4f6;
@@ -269,6 +263,78 @@
       line-height: 1.8;
       font-size: 14px;
     }
+    .feedback-chip {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      z-index: 7;
+      background: rgba(255,255,255,0.86);
+      border: 1.5px solid rgba(128,190,230,0.9);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #2c6f9d;
+      max-width: min(72vw, 420px);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .help-btn {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,0.92);
+      background: rgba(26, 112, 180, 0.86);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
+      cursor: pointer;
+      z-index: 8;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.16);
+    }
+    .feedback-chip.with-help { left: 56px; }
+    .power-ui {
+      position: absolute;
+      left: 50%;
+      bottom: 14px;
+      transform: translateX(-50%);
+      width: min(78%, 360px);
+      z-index: 7;
+      background: rgba(255,255,255,0.8);
+      border: 1.5px solid rgba(130,196,238,0.9);
+      border-radius: 14px;
+      padding: 8px 10px;
+      pointer-events: none;
+    }
+    .power-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #2b6f98;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .help-pop {
+      position: absolute;
+      top: 54px;
+      left: 14px;
+      z-index: 9;
+      width: min(300px, 76vw);
+      background: rgba(255,255,255,0.96);
+      border: 2px solid #9fd4f6;
+      border-radius: 16px;
+      padding: 12px 14px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+      display: none;
+    }
+    .help-pop.show { display: block; }
+    .help-pop h4 { margin: 0 0 8px; font-size: 15px; color: #245b7b; }
+    .help-pop ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; }
+
     .overlay {
       position: absolute;
       inset: 16px;
@@ -371,32 +437,20 @@
             <button class="primary" id="restartBtn">再钓一轮</button>
           </div>
         </div>
-      </div>
-
-      <div class="sidebar">
-        <div class="panel">
-          <h3>小牛状态</h3>
-          <div class="feedback" id="feedback">点水面下钩，钩到鱼再点一下收杆</div>
-          <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
-        </div>
-
-        <div class="panel">
-          <h3>操作</h3>
-          <div class="actions">
-            <button class="primary" id="castBtn">下钩</button>
-            <button class="secondary" id="pullBtn">收杆</button>
-            <button class="secondary" id="resetBtn">重新开始</button>
-          </div>
-        </div>
-
-        <div class="panel">
-          <h3>规则</h3>
-          <ul class="tips">
-            <li>长按“下钩”蓄力，按越久抛得越远</li>
-            <li>收杆会按体积判定，可一次拉起多条鱼</li>
-            <li>金鱼分更高，稀有鱼奖励更多</li>
-            <li>连续成功收杆会累积连钓</li>
+        <button class="help-btn" id="helpBtn" aria-label="查看规则">?</button>
+        <div class="help-pop" id="helpPop">
+          <h4>玩法说明</h4>
+          <ul>
+            <li>在渔区按住蓄力，松开即可下钩</li>
+            <li>按住越久力度越高，抛竿更深</li>
+            <li>鱼上钩后再点渔区可快速收杆</li>
+            <li>连钓成功会持续提高得分</li>
           </ul>
+        </div>
+        <div class="feedback-chip with-help" id="feedback">在渔区按住蓄力，松开下钩</div>
+        <div class="power-ui" id="powerUi">
+          <div class="power-label"><span>力度</span><span id="powerText">0%</span></div>
+          <div class="progress"><div class="progress-fill" id="powerFill"></div></div>
         </div>
       </div>
     </div>
@@ -408,9 +462,6 @@
     const waterArea = document.getElementById('waterArea');
     const line = document.getElementById('line');
     const hook = document.getElementById('hook');
-    const castBtn = document.getElementById('castBtn');
-    const pullBtn = document.getElementById('pullBtn');
-    const resetBtn = document.getElementById('resetBtn');
     const restartBtn = document.getElementById('restartBtn');
     const resultOverlay = document.getElementById('resultOverlay');
     const timeText = document.getElementById('timeText');
@@ -419,7 +470,10 @@
     const caughtText = document.getElementById('caughtText');
     const rateText = document.getElementById('rateText');
     const feedback = document.getElementById('feedback');
-    const progressFill = document.getElementById('progressFill');
+    const powerFill = document.getElementById('powerFill');
+    const powerText = document.getElementById('powerText');
+    const helpBtn = document.getElementById('helpBtn');
+    const helpPop = document.getElementById('helpPop');
     const finalCaught = document.getElementById('finalCaught');
     const finalScore = document.getElementById('finalScore');
     const finalCombo = document.getElementById('finalCombo');
@@ -509,7 +563,6 @@
       timeText.textContent = String(timeLeft);
       const rate = attempts ? Math.round((caught / attempts) * 100) : 0;
       rateText.textContent = `${rate}%`;
-      progressFill.style.width = `${Math.min(100, (caught / 12) * 100)}%`;
     }
 
     function floatText(text, x, y) {
@@ -642,13 +695,14 @@
       hookedFishId = null;
       castPower = 0;
       pendingCast = false;
+      setPowerUI(0);
       resultOverlay.classList.remove('show');
       waterArea.innerHTML = '';
       fishes = [];
       ensureFishCount();
       updateHookVisual();
       updateUI();
-      setFeedback('点水面下钩，钩到鱼再点一下收杆');
+      setFeedback('在渔区按住蓄力，松开下钩');
       gameRunning = true;
       timer = setInterval(() => {
         timeLeft -= 1;
@@ -682,34 +736,64 @@
       }
     }
 
-    function beginCharge() {
-      if (!gameRunning || hookState !== 'idle') return;
-      castChargeStart = performance.now();
-      pendingCast = true;
-      setFeedback('蓄力中…按住越久抛得越远');
-    }
-    function releaseCharge() {
-      if (!pendingCast) return;
-      pendingCast = false;
-      const held = Math.max(0, performance.now() - castChargeStart);
-      const power = Math.min(1, held / 1400);
-      castHook(power);
+    function setPowerUI(pct) {
+      const clamped = Math.max(0, Math.min(100, pct));
+      powerFill.style.width = `${clamped}%`;
+      powerText.textContent = `${Math.round(clamped)}%`;
     }
 
-    castBtn.addEventListener('pointerdown', beginCharge);
-    castBtn.addEventListener('pointerup', releaseCharge);
-    castBtn.addEventListener('pointercancel', releaseCharge);
-    castBtn.addEventListener('mouseleave', releaseCharge);
-    pullBtn.addEventListener('click', pullHook);
-    resetBtn.addEventListener('click', startGame);
-    restartBtn.addEventListener('click', startGame);
-    waterArea.addEventListener('click', () => {
+    function beginCharge(clientX) {
+      if (!gameRunning || hookState !== 'idle') return;
+      const wr = waterArea.getBoundingClientRect();
+      const px = Math.max(18, Math.min(wr.width - 18, clientX - wr.left));
+      hookX = px;
+      castChargeStart = performance.now();
+      pendingCast = true;
+      setFeedback('蓄力中…按住越久抛得越深');
+      updateHookVisual();
+    }
+
+    function refreshChargeUI() {
+      if (!pendingCast) return;
+      const held = Math.max(0, performance.now() - castChargeStart);
+      const power = Math.min(1, held / 1400);
+      setPowerUI(power * 100);
+      requestAnimationFrame(refreshChargeUI);
+    }
+
+    function releaseCharge() {
+      if (!pendingCast) return;
+      const held = Math.max(0, performance.now() - castChargeStart);
+      const power = Math.max(0.12, Math.min(1, held / 1400));
+      pendingCast = false;
+      castHook(power);
+      setPowerUI(power * 100);
+    }
+
+    waterArea.addEventListener('pointerdown', (e) => {
       if (!gameRunning) return;
       if (hookState === 'idle') {
-        castHook(0.45);
-      } else {
+        beginCharge(e.clientX);
+        refreshChargeUI();
+      }
+    });
+    waterArea.addEventListener('pointerup', () => {
+      if (!gameRunning) return;
+      if (pendingCast) {
+        releaseCharge();
+      } else if (hookState !== 'idle') {
         pullHook();
       }
+    });
+    waterArea.addEventListener('pointercancel', () => { if (pendingCast) releaseCharge(); });
+    restartBtn.addEventListener('click', startGame);
+
+    helpBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      helpPop.classList.toggle('show');
+    });
+    document.addEventListener('click', (e) => {
+      if (!helpPop.contains(e.target) && e.target !== helpBtn) helpPop.classList.remove('show');
     });
 
 
