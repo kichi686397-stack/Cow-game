@@ -1,0 +1,3 @@
+Local Git upload test for Cow-game.
+
+This file was added from the local workspace to verify that commits can be pushed to the GitHub repository.
