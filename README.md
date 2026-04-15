@@ -86,7 +86,7 @@
 
 ## 🧭 开发与发版原则
 
-当前版本：**v10.3.3**
+当前版本：**v10.3.4**
 
 当前主文件：`cowgame_deploy/index.html`
 
@@ -113,6 +113,11 @@
 ---
 
 ## 🗂️ 版本日志
+
+### v10.3.4 — 排行榜路线整理
+- 🏅 明确当前排行榜继续使用 Supabase REST 接口
+- 🧹 移除未接入的 Cloudflare KV worker 草稿
+- 📦 清理拼写错误的 `fucntions` 目录，减少部署认知混乱
 
 ### v10.3.3 — 开发规范校准
 - 📝 明确当前主文件、版本日志和每次改动的同步要求
@@ -160,8 +165,8 @@
 - Canvas 绘图（现有兼容层、场景特效与小游戏）
 - 图片帧 / 精灵帧（后续角色动画重构方向）
 - localStorage 本地存档
-- Supabase 排行榜数据库
-- Cloudflare Pages 部署
+- Supabase 排行榜数据库（当前正式路线）
+- Cloudflare Pages / Workers 静态资源部署
 
 ---
 

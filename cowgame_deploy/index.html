@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小牛桌宠 v10.3.3</title>
+    <title>小牛桌宠 v10.3.4</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -3967,23 +3967,30 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '10.3.3';
+var CURRENT_VER = '10.3.4';
 
 var VER_POPUP = {
-    emoji:   '🧭',
-    title:   '开发规范校准',
+    emoji:   '🏅',
+    title:   '排行榜路线整理',
     okBtn:   '收到，继续养牛！✨',
     warning: '',
     items: [
-        '📝 明确当前主文件与版本日志维护规则',
-        '🖼️ 后续小牛与访客动画优先使用图片帧/精灵帧',
-        '🧩 Canvas 保留给场景特效、小游戏与过渡期兼容',
-        '💾 存档 key 继续保持 pixelcow_save_v1',
+        '🏅 当前排行榜继续使用 Supabase',
+        '🧹 移除未接入的 Cloudflare KV worker 草稿',
+        '📦 保持静态部署结构更清晰',
     ]
 };
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
+{
+        ver: 'v10.3.4', title: '排行榜路线整理',
+        items: [
+            '🏅 明确当前排行榜实现继续使用 Supabase REST 接口',
+            '🧹 移除未被前端调用的 Cloudflare KV leaderboard worker 草稿',
+            '📦 清理拼写错误的 fucntions 目录，避免部署认知混乱',
+        ]
+},
 {
         ver: 'v10.3.3', title: '开发规范校准',
         items: [
