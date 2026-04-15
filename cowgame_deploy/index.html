@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小牛桌宠 v10.3.6</title>
+    <title>小牛桌宠 v10.3.7</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -636,6 +636,7 @@
 
 <script src="shared/universe-config.js"></script>
 <script src="shared/game-config.js"></script>
+<script src="shared/version-config.js"></script>
 <script>
 var SPR={
   fish_default_1:"sprites/fish_default_1.png",
@@ -689,6 +690,7 @@ var openFruitGameOverlay, closeFruitGameOverlay;
 
 var universeConfig = window.COWGAME_UNIVERSE_CONFIG;
 var gameConfig = window.COWGAME_GAME_CONFIG;
+var versionConfig = window.COWGAME_VERSION_CONFIG;
 function normalizeUniverseKey(key){
     return universeConfig.normalizeUniverseKey(key);
 }
@@ -3578,22 +3580,19 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '10.3.6';
-
-var VER_POPUP = {
-    emoji:   '🧩',
-    title:   '共享配置抽取',
-    okBtn:   '收到，继续养牛！✨',
-    warning: '',
-    items: [
-        '🧩 新增 shared/game-config.js',
-        '🎣 宇宙钓鱼池移出主文件',
-        '🏅 排行榜分类配置移出主文件',
-    ]
-};
+var CURRENT_VER = versionConfig.CURRENT_VERSION;
+var VER_POPUP = versionConfig.RELEASE_POPUP;
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
+{
+        ver: 'v10.3.7', title: '版本配置拆分',
+        items: [
+            '🗂️ 新增 shared/version-config.js，集中维护当前版本运行配置',
+            '🏷️ CURRENT_VER 从 index.html 迁出，降低后续漏改风险',
+            '📋 新版本弹窗配置从 index.html 迁出',
+        ]
+},
 {
         ver: 'v10.3.6', title: '共享配置抽取',
         items: [

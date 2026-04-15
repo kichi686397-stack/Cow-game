@@ -86,7 +86,7 @@
 
 ## 🧭 开发与发版原则
 
-当前版本：**v10.3.6**
+当前版本：**v10.3.7**
 
 当前主文件：`cowgame_deploy/index.html`
 
@@ -113,6 +113,11 @@
 ---
 
 ## 🗂️ 版本日志
+
+### v10.3.7 — 版本配置拆分
+- 🗂️ 新增 `cowgame_deploy/shared/version-config.js`
+- 🏷️ `CURRENT_VER` 从主文件迁出到共享版本配置
+- 📋 新版本弹窗配置从主文件迁出，减少后续漏改点
 
 ### v10.3.6 — 共享配置抽取
 - 🧩 新增 `cowgame_deploy/shared/game-config.js`
