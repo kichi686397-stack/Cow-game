@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小牛桌宠 v10.3.9</title>
+    <title>小牛桌宠</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -108,10 +108,14 @@
         .lb-item.rank-2{background:linear-gradient(90deg,#e8e8e8,#f9f9f9)}
         .lb-item.rank-3{background:linear-gradient(90deg,#ffd8b0,#fff1e2)}
         /* 耕地双列布局 */        /* 皮肤面板 */
-        .skin-panel{position:fixed;bottom:154px;right:20px;background:rgba(255,255,255,.97);border-radius:18px;padding:16px;box-shadow:0 6px 28px rgba(0,0,0,.18);z-index:200;display:none;width:260px;max-height:440px;overflow-y:auto;scrollbar-width:thin}
-        .skin-panel.open{display:block;animation:panelIn .2s ease-out}
+        .skin-panel{position:fixed;bottom:154px;right:20px;background:rgba(255,255,255,.97);border-radius:18px;padding:16px;box-shadow:0 6px 28px rgba(0,0,0,.18);z-index:200;display:none;width:260px;max-height:440px;overflow:hidden;flex-direction:column}
+        .skin-panel.open{display:flex;animation:panelIn .2s ease-out}
         @keyframes panelIn{0%{opacity:0;transform:scale(.88) translateY(12px)}100%{opacity:1;transform:scale(1) translateY(0)}}
-        .skin-panel h4{color:#8B4513;margin-bottom:12px;font-size:15px;text-align:center}
+        .skin-panel h4{color:#8B4513;margin-bottom:12px;font-size:15px;text-align:center;flex:0 0 auto}
+        .skin-panel-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:3px;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.22) transparent}
+        .skin-panel-body::-webkit-scrollbar{width:6px}
+        .skin-panel-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.22);border-radius:999px}
+        .skin-panel-body::-webkit-scrollbar-track{background:transparent}
         .skin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
         .skin-item{text-align:center;cursor:pointer;padding:7px 3px;border-radius:10px;border:2px solid transparent;transition:all .15s;position:relative}
         .skin-item .si{font-size:22px;display:block}
@@ -122,9 +126,13 @@
         .skin-item:not(.locked):hover{background:#f4f4f4;transform:scale(1.06)}
         .skin-tip{text-align:center;font-size:11px;color:#bbb;margin-top:10px}
         /* 成就面板 */
-        .ach-panel{position:fixed;bottom:218px;right:20px;background:#fff;border-radius:18px;padding:14px 14px 8px;box-shadow:0 6px 28px rgba(0,0,0,.18);z-index:200;display:none;width:268px;max-height:360px;overflow-y:auto;scrollbar-width:thin}
-        .ach-panel.open{display:block;animation:panelIn .2s ease-out}
-        .ach-panel h4{color:#8B4513;font-size:15px;text-align:center;margin-bottom:10px;position:sticky;top:0;background:#fff;padding-bottom:6px}
+        .ach-panel{position:fixed;bottom:218px;right:20px;background:#fff;border-radius:18px;padding:14px 14px 8px;box-shadow:0 6px 28px rgba(0,0,0,.18);z-index:200;display:none;width:268px;max-height:360px;overflow:hidden;flex-direction:column}
+        .ach-panel.open{display:flex;animation:panelIn .2s ease-out}
+        .ach-panel h4{color:#8B4513;font-size:15px;text-align:center;margin-bottom:10px;background:#fff;padding-bottom:6px;flex:0 0 auto}
+        .ach-panel-body{flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:3px;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.22) transparent}
+        .ach-panel-body::-webkit-scrollbar{width:6px}
+        .ach-panel-body::-webkit-scrollbar-thumb{background:rgba(0,0,0,.22);border-radius:999px}
+        .ach-panel-body::-webkit-scrollbar-track{background:transparent}
         .ach-item{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;margin-bottom:5px;border:1.5px solid #f0f0f0}
         .ach-item.unlocked{background:#FFFDE7;border-color:#FFE082}
         .ach-item.locked{opacity:.38}
@@ -576,12 +584,14 @@
         <span>✨ 皮肤道具</span>
         <button onclick="document.getElementById('skinPanel').classList.remove('open')" style="font-size:16px;background:none;border:none;cursor:pointer;color:#bbb;padding:0 2px;line-height:1">✕</button>
     </h4>
-    <div id="appearanceRow" style="display:none;margin-bottom:10px">
-        <div style="font-size:11px;color:#aaa;margin-bottom:5px">🐄 外形等级（可选低级外形）</div>
-        <select id="appearanceSel" style="width:100%;padding:5px 8px;border-radius:8px;border:1.5px solid #eee;font-size:12px;color:#555"></select>
+    <div class="skin-panel-body">
+        <div id="appearanceRow" style="display:none;margin-bottom:10px">
+            <div style="font-size:11px;color:#aaa;margin-bottom:5px">🐄 外形等级（可选低级外形）</div>
+            <select id="appearanceSel" style="width:100%;padding:5px 8px;border-radius:8px;border:1.5px solid #eee;font-size:12px;color:#555"></select>
+        </div>
+        <div class="skin-grid" id="skinGrid"></div>
+        <div class="skin-tip" id="skinTip">喂食解锁更多皮肤</div>
     </div>
-    <div class="skin-grid" id="skinGrid"></div>
-    <div class="skin-tip" id="skinTip">喂食解锁更多皮肤</div>
 </div>
 
 <!-- 成就面板 -->
@@ -590,10 +600,12 @@
         <span>🏆 成就 <span id="achProgress" style="font-size:11px;color:#aaa;font-weight:normal;margin-left:6px"></span></span>
         <button onclick="document.getElementById('achPanel').classList.remove('open')" style="font-size:16px;background:none;border:none;cursor:pointer;color:#bbb;padding:0 2px;line-height:1">✕</button>
     </h4>
-    <div style="height:5px;background:#eee;border-radius:3px;margin-bottom:10px;overflow:hidden">
-        <div id="achProgressBar" style="height:100%;background:linear-gradient(to right,#FFD700,#FFA500);border-radius:3px;transition:width .6s ease;width:0%"></div>
+    <div class="ach-panel-body">
+        <div style="height:5px;background:#eee;border-radius:3px;margin-bottom:10px;overflow:hidden">
+            <div id="achProgressBar" style="height:100%;background:linear-gradient(to right,#FFD700,#FFA500);border-radius:3px;transition:width .6s ease;width:0%"></div>
+        </div>
+        <div id="achList"></div>
     </div>
-    <div id="achList"></div>
 </div>
 
 <!-- 钓鱼场景（小窗） -->
@@ -967,7 +979,12 @@ function renderSkinGrid(){
     if(nextFish)tips.push('再钓'+Math.max(0,nextFish.th-(ST.fishCaught||0))+'条解锁'+nextFish.icon);
     document.getElementById('skinTip').textContent=tips.length?tips.join(' · '):'全部解锁🎉';
 }
-skinBtn.addEventListener('click',function(){skinPanel.classList.toggle('open');achPanel.classList.remove('open');skinBtn.classList.remove('new-unlock');});
+skinBtn.addEventListener('click',function(){
+    skinPanel.classList.toggle('open');
+    achPanel.classList.remove('open');
+    document.getElementById('universePanel').classList.remove('open');
+    skinBtn.classList.remove('new-unlock');
+});
 renderSkinGrid();
 
 /* ═══ 成就系统 ═══ */
@@ -1144,6 +1161,7 @@ document.getElementById('achBtn').addEventListener('click',function(){
     renderAchPanel();
     achPanel.classList.toggle('open');
     skinPanel.classList.remove('open');
+    document.getElementById('universePanel').classList.remove('open');
 });
 renderAchPanel();
 
@@ -3592,6 +3610,13 @@ var VER_POPUP = versionConfig.RELEASE_POPUP;
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
 {
+        ver: 'v10.3.10', title: '标签页标题整理',
+        items: [
+            '🏷️ 浏览器标签页只显示“小牛桌宠”，不再露出版本号',
+            '📋 版本号继续保留在更新弹窗、游戏日志和版本日志中',
+        ]
+},
+{
         ver: 'v10.3.9', title: '排行榜窗口整理',
         items: [
             '🏅 排行榜弹窗改为固定尺寸，避免内容变化撑高窗口',
@@ -4091,6 +4116,14 @@ document.getElementById('universeBtn').addEventListener('click',function(){
     p.classList.toggle('open');
     document.getElementById('skinPanel').classList.remove('open');
     document.getElementById('achPanel').classList.remove('open');
+});
+document.addEventListener('click', function(e){
+    if(e.target.closest('#skinPanel,#achPanel,#universePanel,#skinBtn,#achBtn,#universeBtn,#menuPopup,#fanMenu')){
+        return;
+    }
+    document.getElementById('skinPanel').classList.remove('open');
+    document.getElementById('achPanel').classList.remove('open');
+    document.getElementById('universePanel').classList.remove('open');
 });
 document.querySelectorAll('.u-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
