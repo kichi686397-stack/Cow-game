@@ -1,15 +1,15 @@
 (function (global) {
   global.COWGAME_VERSION_CONFIG = {
-    CURRENT_VERSION: '10.3.8',
+    CURRENT_VERSION: '10.3.9',
     RELEASE_POPUP: {
-      emoji: '🛠️',
-      title: '入口逻辑修复',
-      okBtn: '收到，继续养牛！✨',
+      emoji: '🏅',
+      title: '排行榜窗口整理',
+      okBtn: '收到，继续冲榜！✨',
       warning: '',
       items: [
-        '⚡ 打工按钮只打开新版耕地小游戏',
-        '🎣 测试面板钓鱼改为新版小游戏',
-        '📖 新手教程同步新版钓鱼玩法',
+        '🏅 排行榜窗口固定尺寸，内容变化不再撑开弹窗',
+        '📜 滚动条收进排行榜列表区域，底部按钮保持可见',
+        '📋 更新日志弹窗同步使用内部滚动区域',
       ],
     },
   };

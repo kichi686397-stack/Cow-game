@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小牛桌宠 v10.3.8</title>
+    <title>小牛桌宠 v10.3.9</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -225,11 +225,18 @@
         .changelog-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1100;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
         .changelog-overlay.open{display:flex;animation:popIn .3s ease-out}
         .changelog-box{background:#fff;border-radius:20px;padding:24px 26px;max-width:min(520px,88vw);max-height:78vh;overflow-y:auto;box-shadow:0 12px 48px rgba(0,0,0,.25);position:relative;scrollbar-width:thin}
+        .changelog-panel{width:min(560px,88vw);height:min(720px,78vh);display:flex;flex-direction:column;overflow:hidden}
+        .changelog-scroll{flex:1;min-height:0;overflow-y:auto;padding-right:8px;scrollbar-width:thin}
+        .leaderboard-box{width:min(640px,88vw);height:min(760px,78vh);display:flex;flex-direction:column;overflow:hidden;padding:24px 28px}
+        .leaderboard-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;justify-content:center;flex:0 0 auto}
+        .leaderboard-scroll{flex:1;min-height:0;overflow-y:auto;padding-right:10px;scrollbar-width:thin}
+        .leaderboard-actions{display:flex;gap:8px;margin-top:14px;flex:0 0 auto}
         .changelog-box h2{font-size:18px;color:#8B4513;margin-bottom:14px;text-align:center}
         .changelog-box .cl-ver{font-weight:bold;color:#388E3C;margin:14px 0 6px;font-size:15px}
         .changelog-box .cl-item{font-size:13px;color:#444;line-height:1.7;padding-left:10px}
         .changelog-box .cl-sub{font-size:12px;color:#888;padding-left:18px;line-height:1.6}
         .changelog-close{position:sticky;bottom:0;display:block;width:100%;padding:9px;background:linear-gradient(135deg,#FFD700,#FFA500);border:none;border-radius:12px;font-weight:bold;color:#fff;cursor:pointer;font-size:14px;margin-top:14px}
+        .changelog-panel .changelog-close{position:static;flex:0 0 auto}
         .test-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;border-radius:20px;padding:20px 24px;box-shadow:0 8px 36px rgba(0,0,0,.22);z-index:900;display:none;min-width:300px}
         .test-panel.open{display:block;animation:popIn .2s ease-out}
         .test-panel h3{color:#E53935;font-size:16px;margin-bottom:14px;text-align:center;letter-spacing:.5px}
@@ -394,9 +401,9 @@
 
 <!-- 更新日志弹窗 -->
 <div class="changelog-overlay" id="changelogOverlay">
-  <div class="changelog-box">
+  <div class="changelog-box changelog-panel">
     <h2>📋 小牛桌宠 日志</h2>
-    <div id="changelogContent"></div>
+    <div id="changelogContent" class="changelog-scroll"></div>
     <button class="changelog-close" onclick="document.getElementById('changelogOverlay').classList.remove('open')">知道了，感谢主包！🎉</button>
   </div>
 </div>
@@ -524,27 +531,29 @@
 
 <!-- 排行榜弹窗 -->
 <div class="changelog-overlay" id="lbOverlay">
-  <div class="changelog-box" style="max-width:520px;padding:24px 20px">
+  <div class="changelog-box leaderboard-box">
     <h2 style="margin:0 0 14px;text-align:center">🏅 全球排行榜</h2>
-    <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+    <div class="leaderboard-tabs">
       <button class="lb-tab active" id="lbTab-level">🐄 等级</button>
       <button class="lb-tab"        id="lbTab-ach">🏆 成就</button>
       <button class="lb-tab"        id="lbTab-fruit">🍎 接水果</button>
       <button class="lb-tab"        id="lbTab-fish">🎣 钓鱼</button>
       <button class="lb-tab"        id="lbTab-farm">🌾⚡ 耕地</button>
     </div>
-    <div id="lbList" style="min-height:200px;font-size:13px"></div>
-    <div id="lbFarmGrid" style="display:none">
-      <!-- 标题行可点击切换高亮 -->
-      <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:10px;font-size:14px;font-weight:bold">
-        <span id="farmTitleB" class="farm-tab active">⚡ 闪电耕作</span>
-        <span style="color:#ccc">/</span>
-        <span id="farmTitleA" class="farm-tab">🌾 丰收竞赛</span>
-      </div>
-      <div style="font-size:11px;text-align:center;color:#aaa;margin-bottom:6px" id="farmDesc"></div>
+    <div class="leaderboard-scroll">
+      <div id="lbList" style="min-height:200px;font-size:13px"></div>
+      <div id="lbFarmGrid" style="display:none">
+        <!-- 标题行可点击切换高亮 -->
+        <div style="display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:10px;font-size:14px;font-weight:bold">
+          <span id="farmTitleB" class="farm-tab active">⚡ 闪电耕作</span>
+          <span style="color:#ccc">/</span>
+          <span id="farmTitleA" class="farm-tab">🌾 丰收竞赛</span>
+        </div>
+        <div style="font-size:11px;text-align:center;color:#aaa;margin-bottom:6px" id="farmDesc"></div>
         <div id="farmSingleList"></div>
+      </div>
     </div>
-    <div style="display:flex;gap:8px;margin-top:14px">
+    <div class="leaderboard-actions">
       <button id="lbRefreshBtn" style="flex:1;padding:8px;border-radius:10px;background:#f5f5f5;border:1.5px solid #ddd;cursor:pointer;font-size:13px">🔄 刷新</button>
       <button id="lbUploadBtn" style="flex:1;padding:8px;border-radius:10px;background:#1976d2;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:bold">📤 上传我的数据</button>
       <button id="lbCloseBtn" style="flex:1;padding:8px;border-radius:10px;background:#f5f5f5;border:1.5px solid #ddd;cursor:pointer;font-size:13px">关闭</button>
@@ -3582,6 +3591,14 @@ var VER_POPUP = versionConfig.RELEASE_POPUP;
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
+{
+        ver: 'v10.3.9', title: '排行榜窗口整理',
+        items: [
+            '🏅 排行榜弹窗改为固定尺寸，避免内容变化撑高窗口',
+            '📜 排行榜滚动条收进内容区域，操作按钮保持固定可见',
+            '📋 更新日志弹窗同步使用内部滚动区域',
+        ]
+},
 {
         ver: 'v10.3.8', title: '入口逻辑修复',
         items: [
