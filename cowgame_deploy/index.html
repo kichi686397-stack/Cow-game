@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小牛桌宠</title>
+    <title>小牛桌宠 v10.3.3</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -3967,24 +3967,32 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '10.3.2';
+var CURRENT_VER = '10.3.3';
 
 var VER_POPUP = {
-    emoji:   '🐱',
-    title:   '互动升级 + 动物优化',
-    okBtn:   '好耶，去看看！✨',
+    emoji:   '🧭',
+    title:   '开发规范校准',
+    okBtn:   '收到，继续养牛！✨',
     warning: '',
     items: [
-        '🐱 小猫可互动：点击触发举爪/打滚',
-        '🦋 修复蝴蝶过大问题，体型更自然',
-        '🐦 修复小鸟/蝴蝶落点错误',
-        '🎯 小猫移动节奏优化，更丝滑',
-        '🎁 新增成就与装扮内容',
+        '📝 明确当前主文件与版本日志维护规则',
+        '🖼️ 后续小牛与访客动画优先使用图片帧/精灵帧',
+        '🧩 Canvas 保留给场景特效、小游戏与过渡期兼容',
+        '💾 存档 key 继续保持 pixelcow_save_v1',
     ]
 };
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
+{
+        ver: 'v10.3.3', title: '开发规范校准',
+        items: [
+            '📝 更新维护原则：当前主文件为 cowgame_deploy/index.html，版本日志同步维护在 小牛桌宠_版本日志.md',
+            '🖼️ 调整角色渲染方向：后续小牛与访客动画优先使用图片帧/精灵帧，不再新增整头牛 Canvas 手绘逻辑',
+            '🧩 Canvas 仅作为现有兼容层、场景特效或小游戏画布保留，后续重构逐步迁移',
+            '🏷️ 页面 title、CURRENT_VER、游戏内 changelog 与 Markdown 版本日志保持同步',
+        ]
+},
 {
         ver: 'v10.3.2', title: '互动优化 + 动物表现升级',
         items: [
