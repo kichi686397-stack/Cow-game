@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小牛桌宠 v10.3.5</title>
+    <title>小牛桌宠 v10.3.6</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -635,6 +635,7 @@
 </div>
 
 <script src="shared/universe-config.js"></script>
+<script src="shared/game-config.js"></script>
 <script>
 var SPR={
   fish_default_1:"sprites/fish_default_1.png",
@@ -687,6 +688,7 @@ var openFruitGameOverlay, closeFruitGameOverlay;
 
 
 var universeConfig = window.COWGAME_UNIVERSE_CONFIG;
+var gameConfig = window.COWGAME_GAME_CONFIG;
 function normalizeUniverseKey(key){
     return universeConfig.normalizeUniverseKey(key);
 }
@@ -3359,42 +3361,6 @@ birdCvs.style.pointerEvents='auto';
 birdCvs.addEventListener('click',function(){if(BIRD.state==='perching'){clearTimeout(BIRD.leaveT);BIRD.state='flying-away';bubble('小鸟飞走了~',1500);}});
 document.querySelectorAll('.food-btn').forEach(function(btn){btn.addEventListener('click',function(){feed(btn.dataset.food);});});
 
-/* ═══ 宇宙钓鱼物品池 ═══ */
-var UNIVERSE_FISH={
-    normal:[
-        {icon:'🐟',name:'小鱼',   xp:3, msg:'钓到小鱼啦！🐟'},
-        {icon:'🐠',name:'热带鱼', xp:4, msg:'哇！热带鱼！好漂亮！'},
-        {icon:'🐡',name:'河豚',   xp:5, msg:'河豚！不敢吃...'},
-        {icon:'🦐',name:'大虾',   xp:3, msg:'鲜美的大虾！'},
-        {icon:'🦑',name:'小鱿鱼', xp:4, msg:'鱿鱼！拿去烤！'},
-        {icon:'🥾',name:'破靴子', xp:1, msg:'...钓到破靴子了'},
-    ],
-    cyber:[
-        {spr:'fish_cyber_fish',   name:'电路鱼',   xp:5, msg:'哔——钓到电路鱼！'},
-        {spr:'fish_cyber_shrimp', name:'机械虾',   xp:4, msg:'机械虾，是赛博食材？'},
-        {spr:'fish_cyber_chip',   name:'数据芯片', xp:8, msg:'芯片！价值连城！'},
-        {spr:'fish_cyber_glitch', name:'故障代码块', xp:1, msg:'咳...故障代码块没用的'},
-    ],
-    ocean:[
-        {spr:'fish_ocean_deepfish', name:'深海发光鱼', xp:6, msg:'哇，深海发光鱼！'},
-        {spr:'fish_ocean_octopus',  name:'小章鱼',    xp:5, msg:'章鱼！好可爱！'},
-        {spr:'fish_ocean_shell',    name:'远古螺壳',   xp:4, msg:'远古螺壳，有年代感～'},
-        {spr:'fish_ocean_chest',    name:'沉船宝箱',   xp:15,msg:'沉船宝箱！！发财了！'},
-    ],
-    space:[
-        {spr:'fish_space_alien',  name:'外星鱼',  xp:7, msg:'外星鱼？！它会说话吗'},
-        {spr:'fish_space_rock',   name:'陨石块',  xp:3, msg:'一块陨石...'},
-        {spr:'fish_space_jelly',  name:'太空水母', xp:5, msg:'飘浮的太空水母！'},
-        {spr:'fish_space_debris', name:'太空垃圾', xp:1, msg:'太空垃圾...谁扔的'},
-    ],
-    ancient:[
-        {spr:'fish_ancient_1',      name:'远古鱼',   xp:5, msg:'远古鱼，好像哪里见过...'},
-        {spr:'fish_ancient_2',      name:'腔棘鱼',   xp:7, msg:'腔棘鱼！活化石！！'},
-        {spr:'fish_ancient_turtle', name:'史前乌龟', xp:6, msg:'史前乌龟，慢悠悠的'},
-        {spr:'fish_ancient_bone',   name:'化石骨头', xp:2, msg:'化石骨头...古老的遗迹'},
-    ],
-};
-
 // sprite 图片缓存（首次用到时加载）
 var SPR_CACHE={};
 function getSpriteImg(key, size){
@@ -3420,7 +3386,7 @@ function makeSpriteEl(key, sizePx){
 function updateGamePools(){
     var uni=normalizeUniverseKey(currentUniverse);
     // 更新钓鱼池
-    var fishPool=UNIVERSE_FISH[uni]||UNIVERSE_FISH.normal;
+    var fishPool=gameConfig.getFishPool(uni);
     // 保留💎宝石和👑王冠
     var specials=FISH_TYPES.filter(function(f){return f.icon==='💎'||f.icon==='👑';});
     FISH_TYPES.length=0;
@@ -3612,22 +3578,30 @@ renderAchPanel();
 // 📝 版本配置区 — 每次更新只需修改这里
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-var CURRENT_VER = '10.3.5';
+var CURRENT_VER = '10.3.6';
 
 var VER_POPUP = {
-    emoji:   '🍎',
-    title:   '接水果入口整理',
+    emoji:   '🧩',
+    title:   '共享配置抽取',
     okBtn:   '收到，继续养牛！✨',
     warning: '',
     items: [
-        '🍎 接水果只保留独立 iframe 版本',
-        '🧹 移除旧的内嵌接水果弹层和逻辑',
-        '🧩 主文件少了一套重复小游戏状态',
+        '🧩 新增 shared/game-config.js',
+        '🎣 宇宙钓鱼池移出主文件',
+        '🏅 排行榜分类配置移出主文件',
     ]
 };
 
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
+{
+        ver: 'v10.3.6', title: '共享配置抽取',
+        items: [
+            '🧩 新增 shared/game-config.js，集中维护游戏配置',
+            '🎣 将宇宙钓鱼物品池从 index.html 移到共享配置',
+            '🏅 将排行榜分类、单位和说明文案移到共享配置',
+        ]
+},
 {
         ver: 'v10.3.5', title: '接水果入口整理',
         items: [
@@ -4220,14 +4194,7 @@ function getDeviceId(){
 }
 
 var lbCurrentCat = 'level';
-var LB_CATS = {
-    level:  { unit:'XP',  hint:'按喂食总XP排名',       desc:function(s){return s.extra||'';} },
-    ach:    { unit:'个',  hint:'按解锁成就数排名',     desc:function(s){return s.extra||'';} },
-    fruit:  { unit:'分',  hint:'接水果小游戏最高分',   desc:function(s){return s.extra?'宇宙：'+s.extra:'';} },
-    fish:   { unit:'条',  hint:'累计钓鱼总数',         desc:function(s){return s.extra?'宇宙：'+s.extra:'';} },
-    farm_a: { unit:'分',  hint:'🌾 丰收竞赛 — 30秒内耕地冲高分', desc:function(s){return s.extra?'宇宙：'+s.extra:'';} },
-    farm_b: { unit:'秒',  hint:'⚡ 闪电耕作 — 耕完25块田最短时间',   desc:function(s){return s.extra?'宇宙：'+s.extra:'';}, asc:true }
-};
+var LB_CATS = gameConfig.LEADERBOARD_CATEGORIES;
 
 // 绑定Tab按钮
 ['level','ach','fruit','fish'].forEach(function(cat){
