@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小牛桌宠 v10.3.7</title>
+    <title>小牛桌宠 v10.3.8</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐄</text></svg>">
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
@@ -3586,6 +3586,15 @@ var VER_POPUP = versionConfig.RELEASE_POPUP;
 // 版本日志（最新版本写最前面）
 var CHANGELOG = [
 {
+        ver: 'v10.3.8', title: '入口逻辑修复',
+        items: [
+            '⚡ 修复打工按钮同时触发新版耕地与旧版进度条的问题',
+            '🎣 测试面板钓鱼入口改为新版 fishing_game.html',
+            '📖 新手教程同步新版蓄力钓鱼玩法',
+            '🐄 子页面补充 favicon，减少本地测试 404 噪声',
+        ]
+},
+{
         ver: 'v10.3.7', title: '版本配置拆分',
         items: [
             '🗂️ 新增 shared/version-config.js，集中维护当前版本运行配置',
@@ -4161,7 +4170,7 @@ tBtn('t-night',function(){
 tBtn('t-mood5',function(){
     mood=5; setMood(); bubble('❤️ 心情满了！',1500);
 });
-tBtn('t-fish',  function(){ testPanel.classList.remove('open'); openFishScene(); });
+tBtn('t-fish',  function(){ testPanel.classList.remove('open'); openFishGameOverlay(); });
 tBtn('t-bored', function(){
     lastInteractTime=0; isBoredAnim=false;
     bubble('😪 无聊触发！',1200);
@@ -4555,31 +4564,6 @@ window.addEventListener('message', function(e){
     }
 });
 
-/* ═══ 打工系统（进度条版，可选） ═══ */
-document.getElementById('workBtn').addEventListener('click',function(){
-    if(isWorking){bubble('已经在打工了！',1200);return;}
-    if(hunger<20){bubble('太饿了没力气... 先吃点东西吧 🍎',2000);return;}
-    if(thirst<20){bubble('太渴了没力气... 先喝水吧 💧',2000);return;}
-    isWorking=true; workProgress=0;
-    var btn=document.getElementById('workBtn');
-    btn.textContent='打工中...';btn.style.borderColor='#aaa';btn.style.color='#aaa';
-    bubble('开始打工！努力赚XP 💪',1800); setExpr('happy',1500);
-    workTimer=setInterval(function(){
-        workProgress+=2;updateWorkUI();
-        hunger=Math.max(0,hunger-1);updateHungerUI();
-        thirst=Math.max(0,thirst-0.5);updateThirstUI();drawWaterTrough();
-        if(isWorking) setAct('打工中⚡','💼'); // 防止被其他状态覆盖
-        if(workProgress>=100){
-            clearInterval(workTimer);workTimer=null;isWorking=false;workProgress=0;updateWorkUI();
-            btn.textContent='打工';btn.style.borderColor='#26C6DA';btn.style.color='#00838f';
-            var xpEarn=20+Math.floor(oxLevel*5);
-            feedCount+=xpEarn;updateLevel(true);checkSkinUnlock();showXpGain(xpEarn);
-            bubble('打工完成！获得 '+xpEarn+' XP 🎉',2500);
-            setAct('闲逛中','😊');
-            ST.workCount=(ST.workCount||0)+1;checkAchievements();scheduleSave();
-        }
-    },500);
-});
 document.getElementById('appearanceSel').addEventListener('change',function(){
     localStorage.setItem('pixelcow_appearance',this.value);
 });
@@ -4649,7 +4633,7 @@ var TUT_STEPS = [
     {icon:'👆', title:'和小牛互动', desc:'点击小牛可以摸头，长按拖动可以遛牛！小牛心情好会更可爱哦～'},
     {icon:'🎨', title:'皮肤和装备', desc:'喂食到一定次数可以解锁帽子、围巾等装备！点击右下角🐄菜单里的🎨查看'},
     {icon:'🏆', title:'成就系统', desc:'完成各种挑战可以解锁成就徽章，点击菜单里的🏆查看全部成就和进度'},
-    {icon:'🎣', title:'去湖边钓鱼！', desc:'点击菜单里的🎣进入钓鱼场景，等浮漂沉下去再点收竿，钓到宝贝得XP！'},
+    {icon:'🎣', title:'去湖边钓鱼！', desc:'点击菜单里的🎣开始钓鱼，按住蓄力、松开下钩，瞄准鱼群收获奖励！'},
     {icon:'🎮', title:'接水果小游戏', desc:'点击菜单里的🎮开始接水果！30秒内用篮子接住掉落的食物，小心有害物！'},
     {icon:'🌍', title:'平行宇宙', desc:'点击菜单里的🌍穿越到赛博/水下/太空/古代宇宙，小牛和游戏内容都会变哦！'},
     {icon:'🏅', title:'全球排行榜', desc:'点击菜单里的🏅上传你的数据，和朋友们比较等级、成就和游戏分数！'},
