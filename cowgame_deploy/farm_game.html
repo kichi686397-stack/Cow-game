@@ -6,6 +6,7 @@
   <title>小牛耕地</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%84%3C/text%3E%3C/svg%3E">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
     * { box-sizing: border-box; }
 
     :root {
@@ -21,15 +22,81 @@
       --tile-plowed-a: #8a572b; --tile-plowed-b: #6c411e;
       --tile-golden-a: #ffd86b; --tile-golden-b: #f1b52d;
       --tile-stone-a: #b9bcc4; --tile-stone-b: #8e949f;
+      --glass: rgba(255, 255, 255, 0.86);
     }
 
     body {
       margin: 0;
-      font-family: "Microsoft YaHei", system-ui, sans-serif;
+      font-family: "Be Vietnam Pro", "Microsoft YaHei", system-ui, sans-serif;
       background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
       color: var(--text-main);
-      display: flex; justify-content: center; align-items: flex-start;
-      min-height: 100vh; padding: 12px; overflow-x: hidden;
+      min-height: 100vh;
+      padding: 88px 12px 120px;
+      overflow-x: hidden;
+    }
+    h1, h2, h3 { font-family: "Plus Jakarta Sans", "Microsoft YaHei", system-ui, sans-serif; }
+
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      background: var(--glass); backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(160, 112, 49, .25);
+      padding: 12px 16px;
+      box-shadow: 0 16px 36px rgba(93, 60, 18, .12);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      background: linear-gradient(180deg, var(--btn-a), var(--btn-b));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .brand-title { font-weight: 800; font-size: 20px; line-height: 1.05; }
+    .brand-sub { font-size: 11px; color: var(--text-soft); margin-top: 2px; font-weight: 700; }
+    .coin-pill {
+      background: #fff5db; border: 2px solid #efcf96; border-radius: 999px;
+      padding: 8px 12px; font-size: 13px; font-weight: 800; white-space: nowrap;
+    }
+    .game-stage {
+      width: min(1080px, 100%);
+      margin: 0 auto;
+    }
+    .hero-card {
+      background: var(--glass);
+      border: 2px solid #f1d3a1;
+      border-radius: 22px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 14px 24px rgba(120, 84, 35, 0.12);
+    }
+    .hero-badge {
+      display: inline-block; padding: 5px 10px; border-radius: 999px;
+      font-size: 11px; font-weight: 800; letter-spacing: .08em;
+      text-transform: uppercase; background: #c8f295; color: #345602;
+    }
+    .hero-title { margin: 10px 0 0; font-size: 32px; line-height: 1.12; }
+    .hero-desc { margin: 6px 0 0; color: #6f632a; }
+    .layout-row { display: flex; gap: 10px; }
+    .module-card {
+      background: var(--glass);
+      border: 2px solid var(--panel-border);
+      border-radius: 20px;
+      padding: 10px;
+    }
+    .bottom-dock {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      background: rgba(255, 252, 241, 0.95);
+      backdrop-filter: blur(10px);
+      border-top: 2px solid #efd8ab;
+      display: flex; justify-content: space-around; align-items: flex-end;
+    }
+    .dock-item { font-size: 10px; text-align: center; color: #7a5a2c; font-weight: 700; }
+    .dock-item span { font-size: 18px; display: block; margin-bottom: 2px; }
+    .dock-item.active {
+      background: linear-gradient(180deg,var(--btn-a),var(--btn-b));
+      color: #4d2e0c; border-radius: 999px; padding: 8px 14px; transform: translateY(-16px);
+      box-shadow: 0 10px 16px rgba(152, 83, 0, 0.26);
     }
 
     /* ── 顶部 HUD ── */
@@ -154,7 +221,7 @@
     .tutorial-box ul { text-align: left; font-size: 13px; line-height: 2; padding-left: 18px; margin: 0 0 16px; }
 
     /* ── 主布局 ── */
-    .shell { width: min(920px,100%); }
+    .shell { width: 100%; }
     .main { display: flex; gap: 10px; }
 
     /* ── 主题 ── */
@@ -167,14 +234,18 @@
     /* ── 移动端 ── */
     @media (max-width: 600px) {
       body { padding: 8px; }
+      body { padding-top: 78px; padding-bottom: 112px; }
       .shell { width: 100%; }
       .hud { padding: 6px 8px; gap: 6px; }
+      .brand-sub { display: none; }
+      .hero-title { font-size: 24px; }
+      .coin-pill { font-size: 12px; padding: 6px 10px; }
       .hud-value { font-size: 14px; }
       .hud-label { font-size: 9px; }
       .combo-wrap { width: 34px; height: 34px; }
       .combo-center { font-size: 11px; }
       .mode-toggle-label { font-size: 11px; }
-      .main { flex-direction: column; }
+      .layout-row, .main { flex-direction: column; }
       .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; gap: 6px; }
       .sidebar .panel { flex: 1; min-width: 120px; padding: 8px; }
       .cow-img { width: 56px; height: 56px; }
@@ -184,7 +255,7 @@
     }
   </style>
 </head>
-<body>
+<body class="app-body">
   <!-- 7. 首次说明弹窗 -->
   <div class="tutorial-overlay" id="tutorialOverlay" style="display:none">
     <div class="tutorial-box">
@@ -201,9 +272,27 @@
     </div>
   </div>
 
-  <div class="shell">
-    <!-- HUD -->
-    <div class="hud">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🐄</div>
+      <div>
+        <div class="brand-title">Meadow Cow</div>
+        <div class="brand-sub">小游戏乐园</div>
+      </div>
+    </div>
+    <div class="coin-pill">🪙 积分：<span id="topCoins">0</span></div>
+  </header>
+
+  <main class="game-stage">
+    <section class="hero-card">
+      <span class="hero-badge">Arcade Zone</span>
+      <h1 class="hero-title">小牛耕地 · Farm Rush</h1>
+      <p class="hero-desc">点击耕地冲分，保持连击，帮小牛拿下今日奖励！</p>
+    </section>
+
+    <div class="shell module-card">
+      <!-- HUD -->
+      <div class="hud">
       <!-- 模式拨动开关 (1) -->
       <div class="mode-toggle" id="modeToggle" title="切换模式">
         <span class="mode-toggle-label" id="modeLabel">🌾</span>
@@ -245,7 +334,7 @@
       </div>
     </div>
 
-    <div class="main">
+      <div class="main">
       <!-- 地块 -->
       <div class="field-wrap" id="fieldWrap">
         <div class="field" id="field"></div>
@@ -267,8 +356,17 @@
           <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
         </div>
       </div>
+      </div>
     </div>
-  </div>
+  </main>
+
+  <nav class="bottom-dock" aria-label="主导航">
+    <div class="dock-item"><span>🏠</span>首页</div>
+    <div class="dock-item"><span>🐮</span>互动</div>
+    <div class="dock-item"><span>🛏️</span>房间</div>
+    <div class="dock-item active"><span>🎮</span>游戏</div>
+    <div class="dock-item"><span>🛍️</span>商店</div>
+  </nav>
 
   <script src="shared/universe-config.js"></script>
   <script>
@@ -388,6 +486,8 @@
       const plowed = tiles.filter(t=>t.plowed).length;
       const pct = Math.round(plowed/25*100);
       scoreText.textContent = score;
+      const topCoins = document.getElementById('topCoins');
+      if (topCoins) topCoins.textContent = score;
       comboText.textContent = combo>1?`x${combo}🔥`:`x${combo}`;
       progressFill.style.width = pct+'%';
       if (currentMode==='B' && plowed===25) endGame();
@@ -505,7 +605,8 @@
 
     function setTheme(key) {
       currentTheme=THEMES[key]?key:'farm';
-      document.body.className=THEMES[currentTheme].className||'';
+      Object.values(THEMES).forEach((t)=>{ if (t.className) document.body.classList.remove(t.className); });
+      if (THEMES[currentTheme].className) document.body.classList.add(THEMES[currentTheme].className);
       cow.src=THEMES[currentTheme].cow;
       feedback.textContent=themeFeedback[currentTheme].start;
     }
