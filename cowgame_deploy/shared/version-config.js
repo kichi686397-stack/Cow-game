@@ -1,14 +1,15 @@
 (function (global) {
   global.COWGAME_VERSION_CONFIG = {
-    CURRENT_VERSION: '10.3.10',
+    CURRENT_VERSION: '10.3.11',
     RELEASE_POPUP: {
-      emoji: '🏷️',
-      title: '标签页标题整理',
+      emoji: '🎨',
+      title: '接水果界面焕新',
       okBtn: '收到，继续养牛！✨',
       warning: '',
       items: [
-        '🏷️ 浏览器标签页只显示“小牛桌宠”',
-        '📋 版本号继续保留在更新弹窗和版本日志里',
+        '🎨 接水果小游戏换成卡片化暖色界面',
+        '🧾 HUD 改为胶囊信息条，读数更清晰',
+        '✨ 开始/结算弹层升级为 Arcade 风格',
       ],
     },
   };
