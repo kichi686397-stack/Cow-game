@@ -6,44 +6,85 @@
   <title>小牛接水果</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%84%3C/text%3E%3C/svg%3E">
   <style>
-    *{box-sizing:border-box} html,body{width:100%;height:100%} body{margin:0;font-family:'Segoe UI',sans-serif;background:linear-gradient(180deg,#87CEEB,#B2EBF2 55%,#C8E6C9);color:#333;overflow:hidden}
-    .wrap{width:100%;height:100%;margin:0;background:transparent;overflow:hidden;position:relative}
-    .hud{position:absolute;top:0;left:0;right:0;display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;padding:12px 16px;background:rgba(255,255,255,.95);z-index:3;font-weight:bold}
-    .stage{font-size:12px;color:#666}.score{color:#2e7d32}.timer{color:#d32f2f}.combo{color:#ef6c00}
-    .arena{position:absolute;inset:58px 0 0 0;overflow:hidden;background:linear-gradient(180deg,rgba(135,206,235,.65),rgba(178,235,242,.45) 55%,rgba(200,230,201,.4))}
+    :root{
+      --bg:#fffbef;--surface:#fff9d8;--surface-high:#fffef5;--line:#e7d086;--text:#4b3614;
+      --primary:#d97b00;--primary-d:#ab5600;--accent:#5e9f1f;--warn:#de3f2f;
+    }
+    *{box-sizing:border-box}
+    html,body{width:100%;height:100%}
+    body{
+      margin:0;font-family:'Plus Jakarta Sans','Segoe UI',sans-serif;
+      background:radial-gradient(circle at 50% -20%,#fffef9 8%,var(--bg) 58%,#f6eac2 100%);
+      color:var(--text);overflow:hidden;padding:12px;
+    }
+    .wrap{
+      width:100%;height:100%;margin:0;overflow:hidden;position:relative;border-radius:28px;
+      border:2px solid #f1de9c;background:linear-gradient(180deg,#fffef5 0%,#fff8d6 100%);
+      box-shadow:0 24px 45px rgba(139,88,16,.18);
+    }
+    .hud{
+      position:absolute;top:12px;left:12px;right:12px;display:flex;gap:8px;justify-content:space-between;
+      padding:10px;background:rgba(255,255,255,.9);z-index:3;font-weight:700;border-radius:18px;
+      border:1.5px solid #f2e3b8;box-shadow:0 6px 20px rgba(60,57,20,.08)
+    }
+    .hud-pill{
+      display:flex;align-items:center;gap:6px;padding:6px 10px;background:var(--surface-high);
+      border-radius:999px;border:1px solid #f1e5be;font-size:12px;white-space:nowrap;
+    }
+    .stage{color:#81693f}.score{color:var(--accent)}.timer{color:var(--warn)}.combo{color:#df6f1d}
+    .arena{position:absolute;inset:78px 0 0 0;overflow:hidden;background:linear-gradient(180deg,rgba(135,206,235,.65),rgba(178,235,242,.45) 55%,rgba(200,230,201,.4))}
     body.theme-cyberpunk .arena{background:linear-gradient(180deg,rgba(20,18,45,.85),rgba(30,20,68,.75) 55%,rgba(10,40,70,.6))}
     body.theme-underwater .arena{background:linear-gradient(180deg,rgba(8,76,120,.8),rgba(6,58,96,.75) 50%,rgba(5,40,72,.68))}
     body.theme-space .arena{background:linear-gradient(180deg,rgba(8,8,26,.88),rgba(18,20,60,.76) 55%,rgba(12,16,46,.72))}
     body.theme-ancient .arena{background:linear-gradient(180deg,rgba(232,214,176,.78),rgba(210,184,132,.72) 55%,rgba(180,146,96,.68))}
-    .basket{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:40px;pointer-events:none;z-index:2}
+    .basket{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:40px;pointer-events:none;z-index:2;filter:drop-shadow(0 4px 10px rgba(0,0,0,.22))}
     .item{position:absolute;width:48px;height:48px;display:flex;align-items:center;justify-content:center}
     .item img{width:44px;height:44px;object-fit:contain;pointer-events:none}
-    .screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;background:rgba(255,255,255,.93);z-index:5;padding:18px}
-    .btn{border:none;border-radius:22px;padding:12px 28px;font-size:16px;font-weight:bold;background:linear-gradient(135deg,#66BB6A,#388E3C);color:#fff;cursor:pointer}
-    .sub{border:none;background:none;color:#999;cursor:pointer}
+    .screen{
+      position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+      gap:12px;background:linear-gradient(160deg,rgba(255,255,255,.94),rgba(255,251,233,.94));z-index:5;padding:24px;
+    }
+    .screen-card{
+      width:min(440px,86%);border-radius:30px;border:2px solid var(--line);padding:26px 24px;background:rgba(255,255,255,.75);
+      box-shadow:0 18px 36px rgba(91,69,22,.16);backdrop-filter:blur(8px);
+    }
+    .tag{display:inline-flex;align-items:center;padding:5px 12px;border-radius:999px;background:#ffe9bf;color:#995200;font-weight:800;font-size:11px;letter-spacing:.08em}
+    .btn{
+      border:none;border-radius:18px;padding:12px 30px;font-size:16px;font-weight:800;
+      background:linear-gradient(145deg,var(--primary),var(--primary-d));color:#fff;cursor:pointer;
+      box-shadow:0 8px 18px rgba(170,86,0,.3);transition:transform .15s ease;
+    }
+    .btn:hover{transform:translateY(-1px) scale(1.02)}
+    .sub{border:none;background:none;color:#8f835d;cursor:pointer}
   </style>
 </head>
 <body>
   <div class="wrap" id="wrap">
     <div class="hud" id="hud" style="display:none">
-      <span class="score">🎯 <span id="score">0</span></span>
-      <span class="timer" id="timer">30</span>
-      <span class="combo">连击 <span id="combo">x0</span></span>
-      <span class="stage">阶段 <span id="stage">普通</span></span>
+      <span class="hud-pill score">🎯 分数 <span id="score">0</span></span>
+      <span class="hud-pill timer">⏱ <span id="timer">30</span>s</span>
+      <span class="hud-pill combo">🔥 连击 <span id="combo">x0</span></span>
+      <span class="hud-pill stage">🌾 阶段 <span id="stage">普通</span></span>
     </div>
     <div class="arena" id="arena"></div>
     <div class="screen" id="start">
-      <div style="font-size:56px">🐄</div><h2 style="margin:0">接住食物！</h2>
-      <p style="margin:0;color:#666;line-height:1.7">按住屏幕左右移动篮子，30秒内尽量多接。<br>有害物会扣分并清空连击。</p>
-      <div style="color:#aaa;font-size:13px">历史最佳：<span id="best">0</span></div>
-      <button class="btn" id="startBtn">开始游戏</button>
+      <div class="screen-card">
+        <div class="tag">ARCADE ZONE</div>
+        <div style="font-size:60px;margin:12px 0 6px">🐄</div>
+        <h2 style="margin:0 0 8px;font-size:32px;letter-spacing:-.03em">小牛接水果</h2>
+        <p style="margin:0;color:#666;line-height:1.75">按住屏幕左右移动篮子，在 30 秒里尽可能多接食物。<br>有害物会扣分并清空连击。</p>
+        <div style="color:#968763;font-size:13px;margin-top:10px">历史最佳：<span id="best">0</span></div>
+        <button class="btn" id="startBtn" style="margin-top:16px">开始游戏</button>
+      </div>
     </div>
     <div class="screen" id="end" style="display:none">
-      <div style="font-size:52px">🐄</div>
-      <h2 style="margin:0">游戏结束</h2>
-      <p style="margin:0">得分：<strong id="finalScore">0</strong></p>
-      <p style="margin:0;color:#888">最高连击：<span id="finalCombo">0</span></p>
-      <button class="btn" id="retryBtn">再来一次</button>
+      <div class="screen-card">
+        <div style="font-size:56px;margin-bottom:6px">🏁</div>
+        <h2 style="margin:0 0 8px;font-size:32px;letter-spacing:-.03em">游戏结束</h2>
+        <p style="margin:0">得分：<strong id="finalScore">0</strong></p>
+        <p style="margin:0;color:#888">最高连击：<span id="finalCombo">0</span></p>
+        <button class="btn" id="retryBtn" style="margin-top:14px">再来一次</button>
+      </div>
     </div>
   </div>
   <script src="shared/universe-config.js"></script>
